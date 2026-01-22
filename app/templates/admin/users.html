@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - ToolkitRAG Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <nav class="flex space-x-4 text-sm">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
+                    <a href="/admin" class="text-blue-600 font-medium">Admin</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">{{ user.username }} (Admin)</span>
+                <form action="/auth/logout" method="POST">
+                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Logout</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Admin Navigation -->
+        <div class="bg-white rounded-lg shadow mb-6 p-4">
+            <nav class="flex space-x-4">
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Dashboard</a>
+                <a href="/admin/users" class="px-4 py-2 bg-blue-600 text-white rounded-md">Users</a>
+                <a href="/admin/documents" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Documents</a>
+                <a href="/admin/analytics" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Analytics</a>
+            </nav>
+        </div>
+
+        <!-- User Management -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">User Management</h2>
+                <p class="text-sm text-gray-600 mt-1">Manage user accounts and admin roles</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                User
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Role
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Created
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for u in users %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span class="text-blue-700 font-medium text-sm">
+                                            {{ u.username[0].upper() }}
+                                        </span>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ u.username }}</div>
+                                        <div class="text-xs text-gray-500">ID: {{ u.id[:8] }}...</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ u.email }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if u.is_admin %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Admin
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    User
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ u.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                {% if u.is_admin %}
+                                    {% if u.id != user.id %}
+                                    <form action="/admin/users/{{ u.id }}/demote" method="POST" class="inline">
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-900"
+                                                onclick="return confirm('Remove admin privileges from {{ u.username }}?')">
+                                            Demote
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-gray-400 italic">You</span>
+                                    {% endif %}
+                                {% else %}
+                                <form action="/admin/users/{{ u.id }}/promote" method="POST" class="inline">
+                                    <button type="submit"
+                                            class="text-green-600 hover:text-green-900"
+                                            onclick="return confirm('Grant admin privileges to {{ u.username }}?')">
+                                        Promote
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if not users %}
+            <div class="px-6 py-12 text-center text-gray-500">
+                <p>No users found.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

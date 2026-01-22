@@ -3,68 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>Document Management - ToolkitRAG Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-    <div class="min-h-screen py-12 px-4">
-        <div class="max-w-4xl mx-auto">
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900">Ingested Documents</h1>
-                <p class="mt-2 text-sm text-gray-600">List of all toolkit documents</p>
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <nav class="flex space-x-4 text-sm">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
+                    <a href="/admin" class="text-blue-600 font-medium">Admin</a>
+                </nav>
             </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">{{ user.username }} (Admin)</span>
+                <form action="/auth/logout" method="POST">
+                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Logout</button>
+                </form>
+            </div>
+        </div>
+    </header>
 
-            <div class="mb-4">
-                <a href="/admin/ingest" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                    + Ingest New Document
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Admin Navigation -->
+        <div class="bg-white rounded-lg shadow mb-6 p-4">
+            <nav class="flex space-x-4">
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Dashboard</a>
+                <a href="/admin/users" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Users</a>
+                <a href="/admin/documents" class="px-4 py-2 bg-blue-600 text-white rounded-md">Documents</a>
+                <a href="/admin/analytics" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Analytics</a>
+            </nav>
+        </div>
+
+        <!-- Document Management -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Toolkit Documents</h2>
+                    <p class="text-sm text-gray-600 mt-1">Manage ingested documents and embeddings</p>
+                </div>
+                <a href="/admin/documents/upload" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+                    + Upload Document
                 </a>
             </div>
 
             {% if documents %}
-            <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul class="divide-y divide-gray-200">
-                    {% for doc in documents %}
-                    <li class="px-6 py-4 hover:bg-gray-50">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-medium text-gray-900">{{ doc.version_tag }}</h3>
-                                <p class="text-sm text-gray-500 mt-1">{{ doc.source_filename }}</p>
-                                <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                                    <span>{{ doc.chunk_count }} chunks</span>
-                                    <span>•</span>
-                                    <span>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</span>
-                                    {% if doc.is_active %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Active
-                                    </span>
-                                    {% endif %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Document
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Chunks
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Uploaded
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for doc in documents %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ doc.version_tag }}</div>
+                                    <div class="text-xs text-gray-500">{{ doc.source_filename }}</div>
+                                    <div class="text-xs text-gray-400 mt-1">ID: {{ doc.id[:16] }}...</div>
                                 </div>
-                            </div>
-                            <div class="text-sm text-gray-500">
-                                ID: {{ doc.id }}
-                            </div>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span class="text-sm text-gray-900">{{ doc.chunk_count }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if doc.is_active %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end space-x-3">
+                                    <!-- Reindex Button -->
+                                    <form action="/admin/documents/{{ doc.id }}/reindex" method="POST" class="inline">
+                                        <button type="submit"
+                                                class="text-blue-600 hover:text-blue-900"
+                                                onclick="return confirm('Reindex {{ doc.version_tag }}? This will re-chunk and re-embed the document.')">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
+
+                                    <!-- Toggle Active Button -->
+                                    <form action="/admin/documents/{{ doc.id }}/toggle-active" method="POST" class="inline">
+                                        <button type="submit"
+                                                class="{% if doc.is_active %}text-gray-600 hover:text-gray-900{% else %}text-green-600 hover:text-green-900{% endif %}"
+                                                title="{% if doc.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                            {% if doc.is_active %}
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                            </svg>
+                                            {% else %}
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             {% else %}
-            <div class="bg-white shadow sm:rounded-lg">
-                <div class="px-6 py-12 text-center">
-                    <p class="text-gray-500">No documents ingested yet.</p>
-                    <a href="/admin/ingest" class="mt-4 inline-flex items-center text-blue-600 hover:text-blue-500">
-                        Ingest your first document →
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="mt-6 text-center">
-                <a href="/" class="text-sm text-gray-600 hover:text-gray-500">
-                    Back to home
+            <div class="px-6 py-12 text-center text-gray-500">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-gray-900 font-medium mb-2">No documents yet</p>
+                <p class="text-sm mb-4">Upload your first toolkit document to get started</p>
+                <a href="/admin/documents/upload" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+                    + Upload Document
                 </a>
             </div>
+            {% endif %}
         </div>
+
+        <!-- Help Section -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-sm font-semibold text-blue-900 mb-2">Document Actions</h3>
+            <ul class="text-sm text-blue-800 space-y-1">
+                <li><strong>Reindex:</strong> Re-parse and re-chunk the document, then regenerate embeddings</li>
+                <li><strong>Toggle Active:</strong> Active documents are searchable; inactive documents are hidden from queries</li>
+                <li><strong>Upload:</strong> Add a new document version to the knowledge base</li>
+            </ul>
+        </div>
+
     </div>
 </body>
 </html>

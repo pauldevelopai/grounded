@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - ToolkitRAG Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <nav class="flex space-x-4 text-sm">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
+                    <a href="/admin" class="text-blue-600 font-medium">Admin</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">{{ user.username }} (Admin)</span>
+                <form action="/auth/logout" method="POST">
+                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Logout</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Admin Navigation -->
+        <div class="bg-white rounded-lg shadow mb-6 p-4">
+            <nav class="flex space-x-4">
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Dashboard</a>
+                <a href="/admin/users" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Users</a>
+                <a href="/admin/documents" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Documents</a>
+                <a href="/admin/analytics" class="px-4 py-2 bg-blue-600 text-white rounded-md">Analytics</a>
+            </nav>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <p class="text-sm font-medium text-gray-600">Total Chats</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ analytics.total_chats }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <p class="text-sm font-medium text-gray-600">Total Feedback</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ analytics.total_feedback }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <p class="text-sm font-medium text-gray-600">Avg Rating</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ analytics.avg_rating }}</p>
+                <p class="text-xs text-gray-500 mt-1">out of 5</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <p class="text-sm font-medium text-gray-600">Refusal Rate</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ analytics.refusal_rate }}%</p>
+                <p class="text-xs text-gray-500 mt-1">approx.</p>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- Top Queries -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Top Queries</h3>
+                    <p class="text-sm text-gray-600 mt-1">Most frequently asked questions</p>
+                </div>
+                <div class="p-6">
+                    {% if analytics.top_queries %}
+                    <ol class="space-y-3">
+                        {% for query, count in analytics.top_queries %}
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-blue-700 text-xs font-medium mr-3">
+                                {{ loop.index }}
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-gray-900 truncate">{{ query }}</p>
+                                <p class="text-xs text-gray-500">{{ count }} times</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <p class="text-gray-500 text-sm text-center py-8">No queries yet</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Issue Type Frequency -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Issue Types</h3>
+                    <p class="text-sm text-gray-600 mt-1">Feedback issue categories</p>
+                </div>
+                <div class="p-6">
+                    {% if analytics.issue_types %}
+                    <div class="space-y-3">
+                        {% for issue_type, count in analytics.issue_types %}
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">{{ issue_type or 'Not specified' }}</span>
+                                <span class="text-sm text-gray-500">{{ count }}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                {% set max_count = analytics.issue_types[0][1] %}
+                                {% set percentage = (count / max_count * 100) | round | int %}
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ percentage }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-sm text-center py-8">No issues reported yet</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Rating Distribution -->
+        <div class="bg-white rounded-lg shadow mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Rating Distribution</h3>
+                <p class="text-sm text-gray-600 mt-1">Breakdown of user ratings</p>
+            </div>
+            <div class="p-6">
+                {% if analytics.rating_distribution %}
+                <div class="space-y-3">
+                    {% for rating, count in analytics.rating_distribution %}
+                    <div class="flex items-center">
+                        <div class="w-20 flex-shrink-0">
+                            <span class="text-sm font-medium text-gray-700">{{ rating }} stars</span>
+                        </div>
+                        <div class="flex-1 mx-4">
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                {% set total_ratings = analytics.total_feedback %}
+                                {% set percentage = (count / total_ratings * 100) | round | int if total_ratings > 0 else 0 %}
+                                <div class="bg-yellow-500 h-4 rounded-full flex items-center justify-end pr-2" style="width: {{ percentage }}%">
+                                    {% if percentage > 15 %}
+                                    <span class="text-xs font-medium text-white">{{ count }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-16 flex-shrink-0 text-right">
+                            <span class="text-sm text-gray-500">{{ count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm text-center py-8">No ratings yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Lowest Rated Answers -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Lowest Rated Answers</h3>
+                <p class="text-sm text-gray-600 mt-1">Answers that need improvement</p>
+            </div>
+            <div class="overflow-x-auto">
+                {% if analytics.lowest_rated %}
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Rating
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Query
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Answer Preview
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Issue Type
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for chat_log, feedback in analytics.lowest_rated %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if feedback.rating <= 2 %}bg-red-100 text-red-800{% elif feedback.rating == 3 %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ feedback.rating }} / 5
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 max-w-xs truncate">{{ chat_log.query }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-500 max-w-md truncate">{{ chat_log.answer }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900">{{ feedback.issue_type or '-' }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ feedback.created_at.strftime('%Y-%m-%d') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="px-6 py-12 text-center text-gray-500">
+                    <p>No rated answers yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

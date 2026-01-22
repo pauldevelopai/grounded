@@ -164,7 +164,7 @@ def ingest_document(
             chunk_text=chunk_data['chunk_text'],
             chunk_index=chunk_data['chunk_index'],
             heading=chunk_data.get('heading'),
-            metadata=chunk_data.get('metadata'),
+            chunk_metadata=chunk_data.get('metadata'),
             embedding=None  # Will be populated by embeddings service
         )
         chunk_objects.append(chunk)
@@ -177,5 +177,67 @@ def ingest_document(
     if create_embeddings:
         from app.services.embeddings import create_embeddings_for_document
         create_embeddings_for_document(db, doc.id)
+
+    return doc
+
+
+def reindex_document(db: Session, document_id: str) -> ToolkitDocument:
+    """
+    Reindex a document: re-run chunking and embeddings.
+
+    This deletes existing chunks and recreates them from the source file.
+
+    Args:
+        db: Database session
+        document_id: ID of document to reindex
+
+    Returns:
+        Updated ToolkitDocument instance
+
+    Raises:
+        ValueError: If document not found or file doesn't exist
+    """
+    # Get document
+    doc = db.query(ToolkitDocument).filter(ToolkitDocument.id == document_id).first()
+
+    if not doc:
+        raise ValueError(f"Document {document_id} not found")
+
+    if not os.path.exists(doc.file_path):
+        raise ValueError(f"Source file not found: {doc.file_path}")
+
+    # Delete existing chunks
+    db.query(ToolkitChunk).filter(ToolkitChunk.document_id == document_id).delete()
+    db.commit()
+
+    # Re-parse document
+    content_blocks = parse_docx(doc.file_path)
+
+    # Create new chunks
+    chunks = chunk_content(content_blocks)
+
+    # Update chunk count
+    doc.chunk_count = len(chunks)
+
+    # Create chunk records
+    chunk_objects = []
+    for chunk_data in chunks:
+        chunk = ToolkitChunk(
+            document_id=doc.id,
+            chunk_text=chunk_data['chunk_text'],
+            chunk_index=chunk_data['chunk_index'],
+            heading=chunk_data.get('heading'),
+            chunk_metadata=chunk_data.get('metadata'),
+            embedding=None  # Will be populated by embeddings service
+        )
+        chunk_objects.append(chunk)
+
+    db.bulk_save_objects(chunk_objects)
+    db.commit()
+    db.refresh(doc)
+
+    # Recreate embeddings
+    from app.services.embeddings import create_embeddings_for_document
+    create_embeddings_for_document(db, doc.id)
 
     return doc

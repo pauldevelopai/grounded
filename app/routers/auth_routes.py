@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.services.auth import create_user, authenticate_user, create_session, delete_session
+from app.settings import settings
 
 
 router = APIRouter(tags=["auth"])
@@ -42,11 +43,12 @@ async def login(
     # Redirect to toolkit with session cookie
     response = RedirectResponse(url="/toolkit", status_code=303)
     response.set_cookie(
-        key="session",
+        key=settings.SESSION_COOKIE_NAME,
         value=session.session_token,
-        httponly=True,
-        max_age=30 * 24 * 60 * 60,  # 30 days
-        samesite="lax"
+        httponly=settings.COOKIE_HTTPONLY,
+        secure=settings.COOKIE_SECURE,
+        samesite=settings.COOKIE_SAMESITE,
+        max_age=settings.SESSION_MAX_AGE
     )
 
     return response
@@ -86,11 +88,12 @@ async def register(
         # Redirect to toolkit with session cookie
         response = RedirectResponse(url="/toolkit", status_code=303)
         response.set_cookie(
-            key="session",
+            key=settings.SESSION_COOKIE_NAME,
             value=session.session_token,
-            httponly=True,
-            max_age=30 * 24 * 60 * 60,  # 30 days
-            samesite="lax"
+            httponly=settings.COOKIE_HTTPONLY,
+            secure=settings.COOKIE_SECURE,
+            samesite=settings.COOKIE_SAMESITE,
+            max_age=settings.SESSION_MAX_AGE
         )
 
         return response
@@ -114,6 +117,6 @@ async def logout(
         delete_session(db, session_token)
 
     response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie("session")
+    response.delete_cookie(settings.SESSION_COOKIE_NAME)
 
     return response

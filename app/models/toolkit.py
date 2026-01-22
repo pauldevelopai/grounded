@@ -31,7 +31,7 @@ class ToolkitChunk(Base):
     chunk_text = Column(Text, nullable=False)
     chunk_index = Column(Integer, nullable=False)
     heading = Column(String, nullable=True)  # Parent heading
-    metadata = Column(JSONB, nullable=True)  # Additional metadata
+    chunk_metadata = Column(JSONB, nullable=True)  # Additional metadata
     embedding = Column(Vector(1536), nullable=True)  # OpenAI text-embedding-3-small dimension
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -63,3 +63,25 @@ class Feedback(Base):
     issue_type = Column(String, nullable=True)  # hallucination, irrelevant, etc.
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class StrategyPlan(Base):
+    """Strategy plan with grounded recommendations."""
+
+    __tablename__ = "strategy_plans"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Input parameters (wizard form)
+    inputs = Column(JSONB, nullable=False)  # role, org_type, risk_level, etc.
+
+    # Generated plan
+    plan_text = Column(Text, nullable=False)  # The generated strategy plan
+
+    # Citations from toolkit chunks
+    citations = Column(JSONB, nullable=False)  # List of chunk citations used
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

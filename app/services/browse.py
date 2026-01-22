@@ -49,14 +49,14 @@ def get_available_clusters(db: Session) -> List[str]:
     """
     # Query all chunks with metadata
     chunks = db.query(ToolkitChunk).filter(
-        ToolkitChunk.metadata.isnot(None)
+        ToolkitChunk.chunk_metadata.isnot(None)
     ).all()
 
     # Extract unique clusters
     clusters = set()
     for chunk in chunks:
-        if chunk.metadata and 'cluster' in chunk.metadata:
-            cluster = chunk.metadata['cluster']
+        if chunk.chunk_metadata and 'cluster' in chunk.chunk_metadata:
+            cluster = chunk.chunk_metadata['cluster']
             if cluster:
                 clusters.add(cluster)
 
@@ -71,13 +71,13 @@ def get_available_tags(db: Session) -> List[str]:
         List of tags sorted alphabetically
     """
     chunks = db.query(ToolkitChunk).filter(
-        ToolkitChunk.metadata.isnot(None)
+        ToolkitChunk.chunk_metadata.isnot(None)
     ).all()
 
     tags = set()
     for chunk in chunks:
-        if chunk.metadata and 'tags' in chunk.metadata:
-            chunk_tags = chunk.metadata.get('tags', [])
+        if chunk.chunk_metadata and 'tags' in chunk.chunk_metadata:
+            chunk_tags = chunk.chunk_metadata.get('tags', [])
             if isinstance(chunk_tags, list):
                 tags.update(chunk_tags)
 
@@ -114,7 +114,7 @@ def browse_chunks(
     # Apply cluster filter
     if cluster:
         query = query.filter(
-            ToolkitChunk.metadata['cluster'].astext == cluster
+            ToolkitChunk.chunk_metadata['cluster'].astext == cluster
         )
 
     # Apply keyword search
@@ -149,10 +149,10 @@ def browse_chunks(
             tool_name = None
             tags = []
 
-            if chunk.metadata:
-                cluster_val = chunk.metadata.get('cluster')
-                tool_name = chunk.metadata.get('tool_name')
-                tags = chunk.metadata.get('tags', [])
+            if chunk.chunk_metadata:
+                cluster_val = chunk.chunk_metadata.get('cluster')
+                tool_name = chunk.chunk_metadata.get('tool_name')
+                tags = chunk.chunk_metadata.get('tags', [])
 
             grouped[heading] = BrowseResult(
                 heading=heading,
@@ -208,10 +208,10 @@ def get_section_detail(
     tool_name = None
     tags = []
 
-    if first_chunk.metadata:
-        cluster = first_chunk.metadata.get('cluster')
-        tool_name = first_chunk.metadata.get('tool_name')
-        tags = first_chunk.metadata.get('tags', [])
+    if first_chunk.chunk_metadata:
+        cluster = first_chunk.chunk_metadata.get('cluster')
+        tool_name = first_chunk.chunk_metadata.get('tool_name')
+        tags = first_chunk.chunk_metadata.get('tags', [])
 
     return {
         "heading": heading,
@@ -274,9 +274,9 @@ def search_chunks_by_text(
             "heading": chunk.heading or "Untitled",
             "excerpt": excerpt,
             "full_text": chunk.chunk_text,
-            "cluster": chunk.metadata.get('cluster') if chunk.metadata else None,
-            "tool_name": chunk.metadata.get('tool_name') if chunk.metadata else None,
-            "tags": chunk.metadata.get('tags', []) if chunk.metadata else []
+            "cluster": chunk.chunk_metadata.get('cluster') if chunk.chunk_metadata else None,
+            "tool_name": chunk.chunk_metadata.get('tool_name') if chunk.chunk_metadata else None,
+            "tags": chunk.chunk_metadata.get('tags', []) if chunk.chunk_metadata else []
         })
 
     return results

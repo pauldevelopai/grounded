@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document - ToolkitRAG Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <nav class="flex space-x-4 text-sm">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
+                    <a href="/admin" class="text-blue-600 font-medium">Admin</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">{{ user.username }} (Admin)</span>
+                <form action="/auth/logout" method="POST">
+                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Logout</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <li><a href="/admin" class="hover:text-gray-900">Dashboard</a></li>
+                <li>/</li>
+                <li><a href="/admin/documents" class="hover:text-gray-900">Documents</a></li>
+                <li>/</li>
+                <li class="text-gray-900">Upload</li>
+            </ol>
+        </nav>
+
+        <!-- Upload Form -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Upload Toolkit Document</h2>
+                <p class="text-sm text-gray-600 mt-1">Upload a .docx file to ingest into the knowledge base</p>
+            </div>
+
+            <form action="/admin/documents/upload" method="POST" enctype="multipart/form-data" class="p-6">
+
+                <!-- Version Tag -->
+                <div class="mb-6">
+                    <label for="version_tag" class="block text-sm font-medium text-gray-700 mb-2">
+                        Version Tag *
+                    </label>
+                    <input type="text"
+                           id="version_tag"
+                           name="version_tag"
+                           required
+                           placeholder="e.g., v1.0, 2024-01-23, toolkit-latest"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">
+                        Unique identifier for this version. Must not already exist.
+                    </p>
+                </div>
+
+                <!-- File Upload -->
+                <div class="mb-6">
+                    <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
+                        Document File *
+                    </label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input id="file"
+                                           name="file"
+                                           type="file"
+                                           accept=".docx"
+                                           required
+                                           class="sr-only"
+                                           onchange="displayFileName(this)">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                .docx files only
+                            </p>
+                            <p id="file-name" class="text-sm text-blue-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Embeddings Checkbox -->
+                <div class="mb-6">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="create_embeddings"
+                                   name="create_embeddings"
+                                   type="checkbox"
+                                   checked
+                                   value="true"
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="create_embeddings" class="font-medium text-gray-700">Create embeddings</label>
+                            <p class="text-gray-500">
+                                Generate OpenAI embeddings for vector search. Uncheck to skip embeddings (useful for testing).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end space-x-4 pt-4 border-t">
+                    <a href="/admin/documents" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Upload & Ingest
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-sm font-semibold text-blue-900 mb-2">Upload Process</h3>
+            <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                <li>Document will be parsed and chunked automatically</li>
+                <li>Chunks sized 800-1200 characters with 150 character overlap</li>
+                <li>Embeddings created using OpenAI's text-embedding-3-small model</li>
+                <li>File will be stored in <code class="bg-blue-100 px-1 rounded">./data/uploads/</code></li>
+                <li>Version tag must be unique across all documents</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        function displayFileName(input) {
+            const fileNameDisplay = document.getElementById('file-name');
+            if (input.files && input.files[0]) {
+                fileNameDisplay.textContent = 'Selected: ' + input.files[0].name;
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

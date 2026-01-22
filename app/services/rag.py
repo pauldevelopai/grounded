@@ -87,17 +87,17 @@ def search_similar_chunks(
         # Filter by metadata fields if present
         if "cluster" in filters:
             query_obj = query_obj.filter(
-                ToolkitChunk.metadata['cluster'].astext == filters['cluster']
+                ToolkitChunk.chunk_metadata['cluster'].astext == filters['cluster']
             )
         if "tool_name" in filters:
             query_obj = query_obj.filter(
-                ToolkitChunk.metadata['tool_name'].astext == filters['tool_name']
+                ToolkitChunk.chunk_metadata['tool_name'].astext == filters['tool_name']
             )
         if "tags" in filters and isinstance(filters['tags'], list):
             # Filter chunks that have any of the specified tags
             for tag in filters['tags']:
                 query_obj = query_obj.filter(
-                    ToolkitChunk.metadata['tags'].contains([tag])
+                    ToolkitChunk.chunk_metadata['tags'].contains([tag])
                 )
 
     # Order by similarity and limit
@@ -118,7 +118,7 @@ def search_similar_chunks(
                     chunk_text=chunk.chunk_text,
                     similarity_score=float(similarity),
                     heading=chunk.heading,
-                    metadata=chunk.metadata,
+                    metadata=chunk.chunk_metadata,
                     document_version=version_tag
                 )
             )

@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.auth import User
 from app.services.auth import get_user_from_session
+from app.settings import settings
 
 
 async def get_current_user(
-    session_token: Optional[str] = Cookie(None, alias="session"),
+    session_token: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     db: Session = Depends(get_db)
 ) -> Optional[User]:
     """
@@ -27,7 +28,7 @@ async def get_current_user(
 
 
 async def require_auth(
-    session_token: Optional[str] = Cookie(None, alias="session"),
+    session_token: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     db: Session = Depends(get_db)
 ) -> User:
     """
@@ -57,7 +58,7 @@ async def require_auth(
 
 
 async def require_auth_page(
-    session_token: Optional[str] = Cookie(None, alias="session"),
+    session_token: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     db: Session = Depends(get_db)
 ) -> User:
     """
@@ -83,6 +84,27 @@ async def require_auth_page(
             status_code=status.HTTP_303_SEE_OTHER,
             detail="Redirect to login",
             headers={"Location": "/login"}
+        )
+
+    return user
+
+
+async def require_admin(
+    user: User = Depends(require_auth_page)
+) -> User:
+    """
+    Require admin role for page routes.
+
+    Returns:
+        User object if authenticated and is admin
+
+    Raises:
+        HTTPException 403 if not admin
+    """
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
         )
 
     return user

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Wizard - ToolkitRAG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <h1 class="text-2xl font-bold text-gray-900">Strategy Builder</h1>
+                <nav class="flex space-x-4 text-sm">
+                    <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
+                    <a href="/browse" class="text-gray-600 hover:text-gray-900">Browse</a>
+                    <a href="/strategy" class="text-blue-600 font-medium">Strategy</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">{{ user.username }}</span>
+                <form action="/auth/logout" method="POST">
+                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Logout</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Introduction -->
+        <div class="bg-blue-50 rounded-lg p-6 mb-8 border-2 border-blue-200">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Create Your AI Implementation Strategy</h2>
+            <p class="text-gray-700 mb-2">
+                Answer a few questions about your organization and goals, and we'll generate a customized strategy plan
+                based on toolkit best practices.
+            </p>
+            <p class="text-sm text-gray-600">
+                <strong>Note:</strong> All recommendations will be grounded in toolkit content with citations.
+            </p>
+        </div>
+
+        <!-- Wizard Form -->
+        <form method="POST" action="/strategy/generate" class="bg-white rounded-lg shadow p-8 space-y-6">
+
+            <!-- Role -->
+            <div>
+                <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
+                    What is your role? *
+                </label>
+                <input
+                    type="text"
+                    id="role"
+                    name="role"
+                    required
+                    placeholder="e.g., CTO, Product Manager, Developer"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+            </div>
+
+            <!-- Organization Type -->
+            <div>
+                <label for="org_type" class="block text-sm font-medium text-gray-700 mb-2">
+                    Organization Type *
+                </label>
+                <select
+                    id="org_type"
+                    name="org_type"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select organization type...</option>
+                    <option value="startup">Startup</option>
+                    <option value="sme">Small/Medium Enterprise</option>
+                    <option value="enterprise">Enterprise</option>
+                    <option value="government">Government</option>
+                    <option value="nonprofit">Non-profit</option>
+                    <option value="education">Education</option>
+                </select>
+            </div>
+
+            <!-- Risk Level -->
+            <div>
+                <label for="risk_level" class="block text-sm font-medium text-gray-700 mb-2">
+                    Risk Tolerance *
+                </label>
+                <select
+                    id="risk_level"
+                    name="risk_level"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select risk level...</option>
+                    <option value="low">Low (Conservative, highly regulated)</option>
+                    <option value="medium">Medium (Balanced approach)</option>
+                    <option value="high">High (Innovation-focused)</option>
+                </select>
+            </div>
+
+            <!-- Data Sensitivity -->
+            <div>
+                <label for="data_sensitivity" class="block text-sm font-medium text-gray-700 mb-2">
+                    Data Sensitivity *
+                </label>
+                <select
+                    id="data_sensitivity"
+                    name="data_sensitivity"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select data sensitivity...</option>
+                    <option value="public">Public (No sensitive data)</option>
+                    <option value="internal">Internal (Business confidential)</option>
+                    <option value="pii">Personal Identifiable Information (PII)</option>
+                    <option value="regulated">Regulated (HIPAA, GDPR, etc.)</option>
+                </select>
+            </div>
+
+            <!-- Budget -->
+            <div>
+                <label for="budget" class="block text-sm font-medium text-gray-700 mb-2">
+                    Budget Range *
+                </label>
+                <select
+                    id="budget"
+                    name="budget"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select budget range...</option>
+                    <option value="minimal">Minimal ($0-$1k/month)</option>
+                    <option value="small">Small ($1k-$10k/month)</option>
+                    <option value="medium">Medium ($10k-$50k/month)</option>
+                    <option value="large">Large ($50k+/month)</option>
+                </select>
+            </div>
+
+            <!-- Deployment Preference -->
+            <div>
+                <label for="deployment_pref" class="block text-sm font-medium text-gray-700 mb-2">
+                    Deployment Preference *
+                </label>
+                <select
+                    id="deployment_pref"
+                    name="deployment_pref"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select deployment...</option>
+                    <option value="cloud">Cloud (SaaS, easy to deploy)</option>
+                    <option value="hybrid">Hybrid (Mix of cloud and on-premise)</option>
+                    <option value="sovereign">Sovereign (On-premise, data residency)</option>
+                </select>
+            </div>
+
+            <!-- Use Cases -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Primary Use Cases * (Select all that apply)
+                </label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="content_generation" class="mr-2">
+                        <span class="text-sm">Content Generation</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="code_assistance" class="mr-2">
+                        <span class="text-sm">Code Assistance</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="data_analysis" class="mr-2">
+                        <span class="text-sm">Data Analysis</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="customer_support" class="mr-2">
+                        <span class="text-sm">Customer Support</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="research" class="mr-2">
+                        <span class="text-sm">Research & Analysis</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="automation" class="mr-2">
+                        <span class="text-sm">Process Automation</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-4 border-t">
+                <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+                >
+                    Generate Strategy Plan
+                </button>
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    This may take 10-30 seconds as we analyze toolkit content
+                </p>
+            </div>
+        </form>
+
+    </div>
+</body>
+</html>

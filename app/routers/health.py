@@ -1,5 +1,5 @@
 """Health check endpoints."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db import get_db
@@ -9,16 +9,63 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 async def health():
-    """Basic health check."""
+    """
+    Basic health check - process is alive.
+
+    Returns 200 if the application is running.
+    Used by load balancers and monitoring systems.
+    """
     return {"status": "healthy"}
 
 
 @router.get("/ready")
-async def ready(db: Session = Depends(get_db)):
-    """Readiness check - verifies database connectivity."""
+async def ready(response: Response, db: Session = Depends(get_db)):
+    """
+    Readiness check - verifies database connectivity and required tables.
+
+    Returns 200 if ready to accept traffic, 503 if not ready.
+    Used by orchestrators to know when to route traffic to this instance.
+    """
     try:
         # Test database connection
-        db.execute(text("SELECT 1"))
-        return {"status": "ready", "database": "connected"}
+        with db.connection() as conn:
+            conn.execute(text("SELECT 1"))
+
+        # Check for key tables
+        required_tables = ['users', 'toolkit_documents', 'toolkit_chunks']
+        with db.connection() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT tablename FROM pg_tables "
+                    "WHERE schemaname = 'public' "
+                    f"AND tablename IN ({','.join(f\"'{t}'\" for t in required_tables)})"
+                )
+            )
+            existing_tables = {row[0] for row in result}
+
+        missing_tables = set(required_tables) - existing_tables
+
+        if missing_tables:
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            return {
+                "status": "not_ready",
+                "database": "connected",
+                "tables": "missing",
+                "missing_tables": list(missing_tables),
+                "message": "Run migrations: alembic upgrade head"
+            }
+
+        return {
+            "status": "ready",
+            "database": "connected",
+            "tables": "present"
+        }
+
     except Exception as e:
-        return {"status": "not ready", "database": "disconnected", "error": str(e)}
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "not_ready",
+            "database": "disconnected",
+            "error": str(e),
+            "message": "Database connection failed"
+        }
