@@ -39,11 +39,16 @@
                     </div>
                 </div>
                 <div class="flex items-center">
-                    {% block nav_user %}
-                    <!-- User menu will be added after auth is implemented -->
-                    <a href="/login" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-4">Login</a>
-                    <a href="/register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Register</a>
-                    {% endblock %}
+                    {% if user %}
+                        <span class="text-sm text-gray-700 mr-4">{{ user.email }}</span>
+                        {% if user.is_admin %}
+                            <a href="/admin" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-4">Admin</a>
+                        {% endif %}
+                        <a href="/logout" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Logout</a>
+                    {% else %}
+                        <a href="/login" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-4">Login</a>
+                        <a href="/register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Register</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
