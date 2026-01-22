@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Home - ToolkitRAG{% endblock %}
+
+{% block content %}
+<div class="px-4 py-12 sm:px-6 lg:px-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 sm:text-5xl mb-4">
+            Welcome to ToolkitRAG
+        </h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Your AI-powered toolkit learning and decision-support platform.
+            Ask questions, explore tools, and create strategic plans based on evidence.
+        </p>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+        <!-- Chat Feature -->
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Chat with Toolkit</h3>
+                    </div>
+                </div>
+                <p class="mt-4 text-gray-600">
+                    Ask questions and get answers grounded in the AI toolkit with citations.
+                </p>
+                <div class="mt-4">
+                    <a href="/toolkit" class="text-blue-600 hover:text-blue-800 font-medium">
+                        Start chatting →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browse Feature -->
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Browse Toolkit</h3>
+                    </div>
+                </div>
+                <p class="mt-4 text-gray-600">
+                    Explore tools by cluster, section, and keywords to find what you need.
+                </p>
+                <div class="mt-4">
+                    <a href="/browse" class="text-green-600 hover:text-green-800 font-medium">
+                        Browse tools →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategy Feature -->
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Create Strategy</h3>
+                    </div>
+                </div>
+                <p class="mt-4 text-gray-600">
+                    Build AI tool strategy plans with evidence-based recommendations.
+                </p>
+                <div class="mt-4">
+                    <a href="/strategy" class="text-purple-600 hover:text-purple-800 font-medium">
+                        Create plan →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="mt-12 bg-blue-50 rounded-lg p-8 text-center max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Ready to get started?</h2>
+        <p class="text-gray-600 mb-6">
+            Create an account to save your conversations, plans, and get personalized recommendations.
+        </p>
+        <div class="flex justify-center gap-4">
+            <a href="/register" class="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700">
+                Sign Up
+            </a>
+            <a href="/login" class="bg-white text-blue-600 px-6 py-3 rounded-md font-medium border border-blue-600 hover:bg-blue-50">
+                Log In
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
