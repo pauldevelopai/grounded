@@ -1,0 +1,58 @@
+[Unit]
+Description=ToolkitRAG FastAPI Application
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=notify
+User=deployer
+Group=deployer
+WorkingDirectory=/opt/toolkitrag/app
+
+# Environment
+Environment="PATH=/opt/toolkitrag/app/venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/etc/toolkitrag/.env
+
+# Start command with Uvicorn
+ExecStart=/opt/toolkitrag/app/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info \
+    --access-log \
+    --use-colors
+
+# Alternative: Use Gunicorn with Uvicorn workers
+# ExecStart=/opt/toolkitrag/app/venv/bin/gunicorn app.main:app \
+#     --bind 127.0.0.1:8000 \
+#     --workers 4 \
+#     --worker-class uvicorn.workers.UvicornWorker \
+#     --access-logfile - \
+#     --error-logfile - \
+#     --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/toolkitrag/data /var/log/toolkitrag
+
+# Resource limits
+LimitNOFILE=65536
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=toolkitrag
+
+[Install]
+WantedBy=multi-user.target

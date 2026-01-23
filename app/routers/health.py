@@ -34,11 +34,13 @@ async def ready(response: Response, db: Session = Depends(get_db)):
         # Check for key tables
         required_tables = ['users', 'toolkit_documents', 'toolkit_chunks']
         with db.connection() as conn:
+            # Build the IN clause with proper escaping
+            table_list = ','.join(f"'{t}'" for t in required_tables)
             result = conn.execute(
                 text(
-                    "SELECT tablename FROM pg_tables "
-                    "WHERE schemaname = 'public' "
-                    f"AND tablename IN ({','.join(f\"'{t}'\" for t in required_tables)})"
+                    f"SELECT tablename FROM pg_tables "
+                    f"WHERE schemaname = 'public' "
+                    f"AND tablename IN ({table_list})"
                 )
             )
             existing_tables = {row[0] for row in result}

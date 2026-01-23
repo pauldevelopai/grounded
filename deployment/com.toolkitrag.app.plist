@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Service label (must match filename without .plist) -->
+    <key>Label</key>
+    <string>com.toolkitrag.app</string>
+
+    <!-- Program to run -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/paulmcnally/Developai Dropbox/Paul McNally/DROPBOX/ONMAC/PYTHON 2025/aitools/venv/bin/uvicorn</string>
+        <string>app.main:app</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>8000</string>
+        <string>--workers</string>
+        <string>2</string>
+    </array>
+
+    <!-- Working directory -->
+    <key>WorkingDirectory</key>
+    <string>/Users/paulmcnally/Developai Dropbox/Paul McNally/DROPBOX/ONMAC/PYTHON 2025/aitools</string>
+
+    <!-- Run at load and keep alive -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Restart if crashed -->
+    <key>SuccessfulExit</key>
+    <false/>
+
+    <!-- Standard output and error logs -->
+    <key>StandardOutPath</key>
+    <string>/Users/paulmcnally/Developai Dropbox/Paul McNally/DROPBOX/ONMAC/PYTHON 2025/aitools/logs/toolkitrag.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/paulmcnally/Developai Dropbox/Paul McNally/DROPBOX/ONMAC/PYTHON 2025/aitools/logs/toolkitrag.error.log</string>
+
+    <!-- Environment variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/paulmcnally/Developai Dropbox/Paul McNally/DROPBOX/ONMAC/PYTHON 2025/aitools/venv/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/paulmcnally/Developai Dropbox/Paul McNally/DROPBOX/ONMAC/PYTHON 2025/aitools</string>
+    </dict>
+
+    <!-- User to run as -->
+    <key>UserName</key>
+    <string>paulmcnally</string>
+
+    <!-- Process type (Interactive allows GUI access if needed) -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+
+    <!-- Nice level (0 = normal priority) -->
+    <key>Nice</key>
+    <integer>0</integer>
+</dict>
+</plist>

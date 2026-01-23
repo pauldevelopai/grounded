@@ -8,7 +8,7 @@ Create Date: 2025-01-22
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from pgvector.sqlalchemy import Vector
+# from pgvector.sqlalchemy import Vector  # Temporarily disabled
 
 # revision identifiers, used by Alembic.
 revision = '001'
@@ -19,7 +19,7 @@ depends_on = None
 
 def upgrade() -> None:
     # Enable pgvector extension
-    op.execute('CREATE EXTENSION IF NOT EXISTS vector')
+    # op.execute('CREATE EXTENSION IF NOT EXISTS vector')  # Temporarily disabled
 
     # Create users table
     op.create_table(
@@ -57,7 +57,7 @@ def upgrade() -> None:
         sa.Column('section', sa.String(), nullable=True),
         sa.Column('tool_name', sa.String(), nullable=True),
         sa.Column('tags', JSONB, nullable=True),
-        sa.Column('embedding', Vector(1536), nullable=True),
+        # sa.Column('embedding', Vector(1536), nullable=True),  # Temporarily disabled - requires pgvector
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     )
     op.create_index('ix_toolkit_chunks_document_id', 'toolkit_chunks', ['document_id'])
@@ -110,4 +110,4 @@ def downgrade() -> None:
     op.drop_table('toolkit_chunks')
     op.drop_table('toolkit_documents')
     op.drop_table('users')
-    op.execute('DROP EXTENSION IF EXISTS vector')
+    # op.execute('DROP EXTENSION IF EXISTS vector')  # Temporarily disabled
