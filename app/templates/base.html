@@ -33,6 +33,11 @@
                         <a href="/browse" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                             Browse
                         </a>
+                        {% if user and user.is_admin %}
+                        <a href="/admin/documents/upload" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
+                            Upload
+                        </a>
+                        {% endif %}
                         <a href="/strategy" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                             Strategy
                         </a>
@@ -44,7 +49,9 @@
                         {% if user.is_admin %}
                             <a href="/admin" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-4">Admin</a>
                         {% endif %}
-                        <a href="/logout" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Logout</a>
+                        <form action="/auth/logout" method="POST" style="display: inline;">
+                            <button type="submit" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Logout</button>
+                        </form>
                     {% else %}
                         <a href="/login" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-4">Login</a>
                         <a href="/register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">Register</a>

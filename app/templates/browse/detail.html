@@ -18,6 +18,12 @@
                     <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
                     {% endif %}
                     <a href="/browse" class="text-gray-600 hover:text-gray-900">Browse</a>
+                    {% if user and user.is_admin %}
+                    <a href="/admin/documents/upload" class="text-gray-600 hover:text-gray-900">Upload</a>
+                    {% endif %}
+                    {% if user %}
+                    <a href="/strategy" class="text-gray-600 hover:text-gray-900">Strategy</a>
+                    {% endif %}
                 </nav>
             </div>
             <div class="flex items-center space-x-4">

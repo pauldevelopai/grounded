@@ -1,5 +1,5 @@
 """Authentication routes."""
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.services.auth import create_user, authenticate_user, create_session, delete_session
 from app.settings import settings
+from app.middleware.csrf import CSRFProtectionMiddleware
 
 
 router = APIRouter(tags=["auth"])
@@ -14,16 +15,26 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
+async def login_page(request: Request, response: Response):
     """Login page."""
-    return templates.TemplateResponse(
+    # Generate CSRF token
+    csrf_token = CSRFProtectionMiddleware.generate_token()
+    
+    # Create template response
+    template_response = templates.TemplateResponse(
         "auth/login.html",
-        {"request": request}
+        {"request": request, "csrf_token": csrf_token}
     )
+    
+    # Set CSRF cookie
+    CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
+    
+    return template_response
 
 
 @router.post("/auth/login")
 async def login(
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
@@ -32,10 +43,14 @@ async def login(
     user = authenticate_user(db, username, password)
 
     if not user:
-        return templates.TemplateResponse(
+        # Generate new CSRF token for error page
+        csrf_token = CSRFProtectionMiddleware.generate_token()
+        template_response = templates.TemplateResponse(
             "auth/login.html",
-            {"request": {}, "error": "Invalid username or password"}
+            {"request": request, "error": "Invalid username or password", "csrf_token": csrf_token}
         )
+        CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
+        return template_response
 
     # Create session
     session = create_session(db, str(user.id))
@@ -55,16 +70,26 @@ async def login(
 
 
 @router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
+async def register_page(request: Request, response: Response):
     """Registration page."""
-    return templates.TemplateResponse(
+    # Generate CSRF token
+    csrf_token = CSRFProtectionMiddleware.generate_token()
+    
+    # Create template response
+    template_response = templates.TemplateResponse(
         "auth/register.html",
-        {"request": request}
+        {"request": request, "csrf_token": csrf_token}
     )
+    
+    # Set CSRF cookie
+    CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
+    
+    return template_response
 
 
 @router.post("/auth/register")
 async def register(
+    request: Request,
     email: str = Form(...),
     username: str = Form(...),
     password: str = Form(...),
@@ -73,10 +98,13 @@ async def register(
     """Process registration form."""
     # Validate password length
     if len(password) < 8:
-        return templates.TemplateResponse(
+        csrf_token = CSRFProtectionMiddleware.generate_token()
+        template_response = templates.TemplateResponse(
             "auth/register.html",
-            {"request": {}, "error": "Password must be at least 8 characters"}
+            {"request": request, "error": "Password must be at least 8 characters", "csrf_token": csrf_token}
         )
+        CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
+        return template_response
 
     try:
         # Create user
@@ -99,10 +127,13 @@ async def register(
         return response
 
     except ValueError as e:
-        return templates.TemplateResponse(
+        csrf_token = CSRFProtectionMiddleware.generate_token()
+        template_response = templates.TemplateResponse(
             "auth/register.html",
-            {"request": {}, "error": str(e)}
+            {"request": request, "error": str(e), "csrf_token": csrf_token}
         )
+        CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
+        return template_response
 
 
 @router.post("/auth/logout")

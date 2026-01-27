@@ -101,9 +101,10 @@ def search_similar_chunks(
                 )
 
     # Order by similarity and limit
+    from sqlalchemy import desc
     results = (
         query_obj
-        .order_by('similarity DESC')
+        .order_by(desc('similarity'))
         .limit(top_k)
         .all()
     )

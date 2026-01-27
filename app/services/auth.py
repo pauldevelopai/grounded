@@ -1,6 +1,6 @@
 """Authentication service."""
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import bcrypt
 from sqlalchemy.orm import Session
@@ -114,7 +114,7 @@ def create_session(db: Session, user_id: str, expires_in_days: int = 30) -> Sess
         Created Session object
     """
     session_token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(days=expires_in_days)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
 
     session = SessionModel(
         user_id=user_id,
@@ -147,8 +147,9 @@ def get_session(db: Session, session_token: str) -> Optional[SessionModel]:
     if not session:
         return None
 
-    # Check if expired
-    if session.expires_at < datetime.utcnow():
+    # Check if expired (use timezone-aware datetime)
+    now = datetime.now(timezone.utc)
+    if session.expires_at < now:
         db.delete(session)
         db.commit()
         return None

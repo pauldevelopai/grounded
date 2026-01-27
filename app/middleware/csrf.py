@@ -22,13 +22,18 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         # Methods that require CSRF protection
         self.protected_methods = {"POST", "PUT", "DELETE", "PATCH"}
 
-        # Paths exempt from CSRF (API endpoints with other auth)
+        # Paths exempt from CSRF (API endpoints with other auth, and form endpoints with inline CSRF)
         self.exempt_paths = {
             "/api/auth/login",
             "/api/auth/register",
             "/api/auth/logout",
             "/api/rag/query",
             "/api/rag/search",
+            "/auth/login",
+            "/auth/register",
+            "/auth/logout",
+            "/toolkit/ask",
+            "/toolkit/feedback",
             "/health",
             "/ready",
         }
