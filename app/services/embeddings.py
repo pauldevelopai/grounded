@@ -33,11 +33,11 @@ class OpenAIEmbeddingProvider:
 
     def create_embedding(self, text: str) -> List[float]:
         """Create embedding using OpenAI API."""
-        response = self.client.embeddings.create(
-            model=self.model,
-            input=text,
-            dimensions=self._dimensions
-        )
+        kwargs = {"model": self.model, "input": text}
+        # Only text-embedding-3-* models support the dimensions parameter
+        if self.model.startswith("text-embedding-3"):
+            kwargs["dimensions"] = self._dimensions
+        response = self.client.embeddings.create(**kwargs)
         return response.data[0].embedding
 
     @property
