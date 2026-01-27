@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Grounded{% endblock %}</title>
+    <title>{% block title %}The AI Editorial Toolkit{% endblock %}</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,7 +25,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-xl font-bold text-blue-600">Grounded</a>
+                        <a href="/" class="text-xl font-bold text-blue-600">The AI Editorial Toolkit</a>
                     </div>
                     <!-- Desktop nav -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -135,7 +135,7 @@
     <footer class="bg-white border-t border-gray-200 mt-12">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <p class="text-center text-sm text-gray-500">
-                Grounded &copy; 2025 - AI Toolkit Learning Platform
+                The AI Editorial Toolkit &copy; 2025
             </p>
         </div>
     </footer>
@@ -156,7 +156,7 @@
                 <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3" style="min-height:0;">
                     <div class="flex justify-start">
                         <div class="bg-gray-100 text-gray-800 rounded-lg px-3 py-2 max-w-[85%] text-sm">
-                            Hi{{ ' ' + user.display_name if user.display_name else '' }}! Ask me anything about the AI toolkit.
+                            Hi{{ ' ' + user.display_name if user.display_name else '' }}! Ask me anything about The AI Editorial Toolkit.
                         </div>
                     </div>
                 </div>
@@ -185,7 +185,7 @@
                 <!-- Not logged in -->
                 <div class="flex-1 flex items-center justify-center p-6">
                     <div class="text-center">
-                        <p class="text-gray-600 text-sm mb-3">Login to ask questions about the toolkit.</p>
+                        <p class="text-gray-600 text-sm mb-3">Login to ask questions about The AI Editorial Toolkit.</p>
                         <a href="/login" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">Login</a>
                     </div>
                 </div>
@@ -239,7 +239,7 @@
         var loadingDiv = document.createElement('div');
         loadingDiv.className = 'flex justify-start';
         loadingDiv.id = 'chat-loading';
-        loadingDiv.innerHTML = '<div class="bg-gray-100 text-gray-500 rounded-lg px-3 py-2 text-sm animate-pulse">Searching toolkit...</div>';
+        loadingDiv.innerHTML = '<div class="bg-gray-100 text-gray-500 rounded-lg px-3 py-2 text-sm animate-pulse">Searching editorial toolkit...</div>';
         messages.appendChild(loadingDiv);
 
         messages.scrollTop = messages.scrollHeight;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Grounded</title>
+    <title>Admin Dashboard - The AI Editorial Toolkit</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
@@ -110,7 +110,7 @@
                     </svg>
                     <div>
                         <p class="font-medium text-gray-900">Upload Document</p>
-                        <p class="text-sm text-gray-600">Ingest new toolkit content</p>
+                        <p class="text-sm text-gray-600">Ingest new editorial toolkit content</p>
                     </div>
                 </a>
 
@@ -125,7 +125,7 @@
                 </a>
 
                 <form action="/admin/documents/ingest-kit" method="POST" class="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition cursor-pointer"
-                      onclick="if(confirm('Ingest all toolkit content from /kit JSON files?')) this.submit();">
+                      onclick="if(confirm('Ingest all editorial toolkit content from /kit JSON files?')) this.submit();">
                     <input type="hidden" name="create_embeddings" value="true">
                     <svg class="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>

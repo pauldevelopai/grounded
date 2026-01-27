@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Management - Grounded Admin</title>
+    <title>Document Management - The AI Editorial Toolkit Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
@@ -44,7 +44,7 @@
         <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Toolkit Documents</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">Editorial Toolkit Documents</h2>
                     <p class="text-sm text-gray-600 mt-1">Manage ingested documents and embeddings</p>
                 </div>
                 <div class="flex gap-3">
@@ -52,7 +52,7 @@
                         <input type="hidden" name="create_embeddings" value="true">
                         <button type="submit"
                                 class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
-                                onclick="return confirm('Ingest all toolkit content from /kit JSON files? This will create a new document with all 46 tools, 7 clusters and foundational content.')">
+                                onclick="return confirm('Ingest all editorial toolkit content from /kit JSON files? This will create a new document with all 46 tools, 7 clusters and foundational content.')">
                             Ingest from Kit
                         </button>
                     </form>
@@ -158,7 +158,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 <p class="text-gray-900 font-medium mb-2">No documents yet</p>
-                <p class="text-sm mb-4">Upload your first toolkit document to get started</p>
+                <p class="text-sm mb-4">Upload your first editorial toolkit document to get started</p>
                 <a href="/admin/documents/upload" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
                     + Upload Document
                 </a>

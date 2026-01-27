@@ -48,7 +48,7 @@ def validate_database() -> None:
             'toolkit_documents',
             'toolkit_chunks',
             'chat_logs',
-            'feedbacks'
+            'feedback'
         ]
 
         with engine.connect() as conn:

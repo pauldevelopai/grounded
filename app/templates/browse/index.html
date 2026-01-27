@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Browse Toolkit - Grounded{% endblock %}
+{% block title %}Browse Editorial Toolkit - The AI Editorial Toolkit{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-0">
 
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Browse Toolkit</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Browse Editorial Toolkit</h1>
         <p class="mt-2 text-gray-600 max-w-2xl">
-            Search and filter ingested toolkit content by cluster or keyword.
+            Search and filter ingested editorial toolkit content by cluster or keyword.
         </p>
     </div>
 
@@ -136,7 +136,7 @@
                     {% if cluster or keyword %}
                     Try adjusting your filters or search terms.
                     {% else %}
-                    No toolkit content has been ingested yet. Use the admin panel to ingest content from the kit.
+                    No editorial toolkit content has been ingested yet. Use the admin panel to ingest content from the kit.
                     {% endif %}
                 </p>
                 {% if cluster or keyword %}
