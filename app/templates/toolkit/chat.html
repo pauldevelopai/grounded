@@ -49,56 +49,6 @@
                     </details>
                     {% endif %}
 
-                    <!-- Feedback Form -->
-                    {% if not log.feedback %}
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        <form
-                            hx-post="/toolkit/feedback/{{ log.id }}"
-                            hx-target="#feedback-{{ log.id }}"
-                            class="space-y-3"
-                        >
-                            <div class="text-sm font-medium text-gray-700">Rate this answer:</div>
-                            <div class="flex space-x-2">
-                                {% for i in range(1, 6) %}
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="{{ i }}" required class="mr-1">
-                                    <span class="text-sm">{{ i }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                            <div>
-                                <select name="issue_type" class="text-sm border border-gray-300 rounded px-2 py-1">
-                                    <option value="">No issues</option>
-                                    <option value="hallucination">Hallucination</option>
-                                    <option value="irrelevant">Irrelevant</option>
-                                    <option value="too_vague">Too vague</option>
-                                    <option value="security_concern">Security concern</option>
-                                    <option value="cost_concern">Cost concern</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div>
-                                <textarea
-                                    name="comment"
-                                    rows="2"
-                                    placeholder="Optional comment..."
-                                    class="w-full text-sm border border-gray-300 rounded px-2 py-1"
-                                ></textarea>
-                            </div>
-                            <button
-                                type="submit"
-                                class="text-sm bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
-                            >
-                                Submit Feedback
-                            </button>
-                        </form>
-                        <div id="feedback-{{ log.id }}"></div>
-                    </div>
-                    {% else %}
-                    <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                        Feedback submitted (Rating: {{ log.feedback.rating }}/5)
-                    </div>
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}
