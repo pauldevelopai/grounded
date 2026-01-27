@@ -47,6 +47,9 @@
                         <a href="/browse" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                             Browse
                         </a>
+                        <a href="/toolkit" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
+                            History
+                        </a>
                         {% if user and user.is_admin %}
                         <a href="/admin/documents/upload" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                             Upload
@@ -95,6 +98,7 @@
                 <a href="/foundations" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Foundations</a>
                 <a href="/sources" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Sources</a>
                 <a href="/browse" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Browse</a>
+                <a href="/toolkit" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">History</a>
                 {% if user and user.is_admin %}
                 <a href="/admin/documents/upload" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Upload</a>
                 {% endif %}
