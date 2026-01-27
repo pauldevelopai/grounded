@@ -152,7 +152,7 @@ def generate_answer(
     if not search_results:
         # No matching toolkit content — use LLM with general knowledge
         try:
-            fallback_prompt = """You are "Grounded", a knowledgeable AI assistant for The AI Editorial Toolkit, a journalism AI learning platform.
+            fallback_prompt = """You are "Ask the Toolkit", a knowledgeable AI assistant for The AI Editorial Toolkit, a journalism AI learning platform.
 
 You have access to The AI Editorial Toolkit knowledge base, but no directly relevant content was found for this query. Use your general knowledge to help the user.
 
@@ -201,7 +201,7 @@ RULES:
         context = context[:settings.RAG_MAX_CONTEXT_LENGTH] + "..."
 
     # Build prompt with augmented grounding instructions
-    system_prompt = """You are "Grounded", a knowledgeable AI assistant for The AI Editorial Toolkit, a journalism AI learning platform.
+    system_prompt = """You are "Ask the Toolkit", a knowledgeable AI assistant for The AI Editorial Toolkit, a journalism AI learning platform.
 You have deep expertise in AI, journalism, and technology. You are augmented with specific editorial toolkit content provided below.
 
 IMPORTANT RULES:
