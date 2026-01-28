@@ -8,6 +8,7 @@ from urllib.parse import quote, unquote
 
 from app.db import get_db
 from app.models.auth import User
+from app.models.toolkit import UserActivity
 from app.dependencies import get_current_user
 from app.services.browse import (
     browse_chunks,
@@ -44,6 +45,20 @@ async def browse_page(
         keyword=keyword,
         limit=100
     )
+
+    # Log activity if user is authenticated and a search/filter was used
+    if user and (keyword or cluster):
+        details = {"results_count": len(results)}
+        if cluster:
+            details["cluster"] = cluster
+        activity = UserActivity(
+            user_id=user.id,
+            activity_type="browse",
+            query=keyword or None,
+            details=details,
+        )
+        db.add(activity)
+        db.commit()
 
     return templates.TemplateResponse(
         "browse/index.html",

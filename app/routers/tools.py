@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.auth import User
+from app.models.toolkit import UserActivity
 from app.dependencies import get_current_user
 from app.services.kit_loader import (
     get_all_tools, get_tool, get_all_clusters,
@@ -23,6 +24,7 @@ async def tool_finder(
     request: Request,
     need: Optional[str] = None,
     user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """Interactive tool finder to help journalists choose the right tool."""
     clusters = get_all_clusters()
@@ -73,6 +75,17 @@ async def tool_finder(
         recommended.sort(key=lambda t: (
             t["cdi_scores"]["cost"] + t["cdi_scores"]["difficulty"] + t["cdi_scores"]["invasiveness"]
         ))
+
+    # Log activity if user is authenticated and a need was selected
+    if user and need and need in needs_map:
+        activity = UserActivity(
+            user_id=user.id,
+            activity_type="tool_finder",
+            query=needs_map[need]["label"],
+            details={"need": need, "results_count": len(recommended)},
+        )
+        db.add(activity)
+        db.commit()
 
     return templates.TemplateResponse(
         "tools/finder.html",
@@ -136,6 +149,7 @@ async def tools_index(
     max_difficulty: Optional[str] = None,
     max_invasiveness: Optional[str] = None,
     user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """List all tools with optional filtering."""
     clusters = get_all_clusters()
@@ -153,6 +167,26 @@ async def tools_index(
         max_difficulty=diff_val,
         max_invasiveness=inv_val,
     )
+
+    # Log activity if user is authenticated and a search/filter was used
+    if user and (q or cluster_val or cost_val is not None or diff_val is not None or inv_val is not None):
+        details = {"results_count": len(tools)}
+        if cluster_val:
+            details["cluster"] = cluster_val
+        if cost_val is not None:
+            details["max_cost"] = cost_val
+        if diff_val is not None:
+            details["max_difficulty"] = diff_val
+        if inv_val is not None:
+            details["max_invasiveness"] = inv_val
+        activity = UserActivity(
+            user_id=user.id,
+            activity_type="tool_search",
+            query=q or None,
+            details=details,
+        )
+        db.add(activity)
+        db.commit()
 
     return templates.TemplateResponse(
         "tools/index.html",

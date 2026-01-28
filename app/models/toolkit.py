@@ -65,6 +65,19 @@ class Feedback(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class UserActivity(Base):
+    """User activity log for tracking queries across all features."""
+
+    __tablename__ = "user_activity"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    activity_type = Column(String, nullable=False, index=True)  # tool_finder, tool_search, browse, cdi_explorer
+    query = Column(Text, nullable=True)  # Search query or selected need
+    details = Column(JSONB, nullable=True)  # Filters, result counts, etc.
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+
+
 class StrategyPlan(Base):
     """Strategy plan with grounded recommendations."""
 

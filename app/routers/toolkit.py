@@ -8,7 +8,7 @@ from sqlalchemy import UUID
 
 from app.db import get_db
 from app.models.auth import User
-from app.models.toolkit import ChatLog, Feedback
+from app.models.toolkit import ChatLog, Feedback, StrategyPlan, UserActivity
 from app.dependencies import require_auth_page
 from app.services.rag import rag_answer
 
@@ -20,33 +20,80 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("", response_class=HTMLResponse)
 async def toolkit_page(
     request: Request,
+    filter_type: Optional[str] = None,
     user: User = Depends(require_auth_page),
     db: Session = Depends(get_db)
 ):
-    """Toolkit chat page (requires authentication)."""
+    """Activity history page (requires authentication)."""
 
-    # Get user's recent chat logs
-    recent_logs = (
-        db.query(ChatLog)
-        .filter(ChatLog.user_id == user.id)
-        .order_by(ChatLog.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    # Build unified timeline from all activity sources
+    timeline = []
 
-    # Attach feedback to each log if exists
-    for log in recent_logs:
-        feedback = db.query(Feedback).filter(
-            Feedback.chat_log_id == log.id
-        ).first()
-        log.feedback = feedback
+    # 1. Chat logs
+    if not filter_type or filter_type == "chat":
+        chat_logs = (
+            db.query(ChatLog)
+            .filter(ChatLog.user_id == user.id)
+            .order_by(ChatLog.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        for log in chat_logs:
+            feedback = db.query(Feedback).filter(
+                Feedback.chat_log_id == log.id
+            ).first()
+            log.feedback = feedback
+            timeline.append({
+                "type": "chat",
+                "created_at": log.created_at,
+                "data": log,
+            })
+
+    # 2. Strategy plans
+    if not filter_type or filter_type == "strategy":
+        strategy_plans = (
+            db.query(StrategyPlan)
+            .filter(StrategyPlan.user_id == user.id)
+            .order_by(StrategyPlan.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        for plan in strategy_plans:
+            timeline.append({
+                "type": "strategy",
+                "created_at": plan.created_at,
+                "data": plan,
+            })
+
+    # 3. User activities (tool finder, tool search, browse)
+    if not filter_type or filter_type in ("tool_finder", "tool_search", "browse"):
+        activity_query = db.query(UserActivity).filter(UserActivity.user_id == user.id)
+        if filter_type in ("tool_finder", "tool_search", "browse"):
+            activity_query = activity_query.filter(UserActivity.activity_type == filter_type)
+        activities = (
+            activity_query
+            .order_by(UserActivity.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        for activity in activities:
+            timeline.append({
+                "type": activity.activity_type,
+                "created_at": activity.created_at,
+                "data": activity,
+            })
+
+    # Sort unified timeline by created_at descending, take last 30
+    timeline.sort(key=lambda x: x["created_at"], reverse=True)
+    timeline = timeline[:30]
 
     return templates.TemplateResponse(
         "toolkit/chat.html",
         {
             "request": request,
             "user": user,
-            "recent_logs": recent_logs
+            "timeline": timeline,
+            "filter_type": filter_type,
         }
     )
 
