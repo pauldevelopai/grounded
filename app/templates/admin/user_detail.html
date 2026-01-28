@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Detail - The AI Editorial Toolkit Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation (same as base.html) -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-lg font-bold text-blue-600 whitespace-nowrap">AI Toolkit</a>
+                    </div>
+                    <div class="hidden lg:ml-4 lg:flex lg:space-x-4">
+                        <a href="/tools" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Tools</a>
+                        <a href="/tools/finder" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Tool Finder</a>
+                        <a href="/tools/cdi" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">CDI</a>
+                        <a href="/clusters" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Clusters</a>
+                        <a href="/foundations" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Foundations</a>
+                        <a href="/sources" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Sources</a>
+                        <a href="/browse" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Browse</a>
+                        <a href="/toolkit" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">History</a>
+                        <a href="/strategy" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Strategy</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="hidden lg:flex lg:items-center lg:ml-4 flex-shrink-0">
+                        <span class="text-sm text-gray-700 mr-3">{{ user.display_name or user.email }}</span>
+                        <a href="/profile" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-3">Profile</a>
+                        <a href="/admin" class="text-sm font-medium text-blue-600 mr-3">Admin</a>
+                        <form action="/auth/logout" method="POST" style="display: inline;">
+                            <button type="submit" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Admin Navigation -->
+        <div class="bg-white rounded-lg shadow mb-6 p-4">
+            <nav class="flex space-x-4">
+                <a href="/admin" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Dashboard</a>
+                <a href="/admin/users" class="px-4 py-2 bg-blue-600 text-white rounded-md">Users</a>
+                <a href="/admin/documents" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Documents</a>
+                <a href="/admin/analytics" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Analytics</a>
+                <a href="/admin/feedback" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Feedback</a>
+            </nav>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <li><a href="/admin" class="hover:text-gray-900">Dashboard</a></li>
+                <li>/</li>
+                <li><a href="/admin/users" class="hover:text-gray-900">Users</a></li>
+                <li>/</li>
+                <li class="text-gray-900">{{ target_user.username }}</li>
+            </ol>
+        </nav>
+
+        <!-- User Header -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-700 font-bold text-2xl">
+                            {{ target_user.username[0].upper() }}
+                        </span>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-900">{{ target_user.display_name or target_user.username }}</h2>
+                        <p class="text-sm text-gray-500">@{{ target_user.username }} &middot; {{ target_user.email }}</p>
+                        <div class="mt-1 flex items-center space-x-2">
+                            {% if target_user.is_admin %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Admin</span>
+                            {% endif %}
+                            {% if target_user.is_active %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Active</span>
+                            {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <!-- AI Insights Button -->
+                    <form action="/admin/users/{{ target_user.id }}/insights" method="POST">
+                        <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium">
+                            Generate AI Insights
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Activity Summary & Timeline -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Activity Summary Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-xs font-medium text-gray-500 uppercase">Total Chats</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ activity_summary.total_chats }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ activity_summary.recent_chats }} last 30 days</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-xs font-medium text-gray-500 uppercase">Activities</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ activity_summary.total_activities }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ activity_summary.recent_activities }} last 30 days</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-xs font-medium text-gray-500 uppercase">Feedback Given</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ activity_summary.feedback_given }}</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-xs font-medium text-gray-500 uppercase">App Feedback</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ activity_summary.app_feedback }}</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Timeline -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                    </div>
+                    <div class="p-6">
+                        {% if timeline %}
+                        <div class="flow-root">
+                            <ul class="-mb-8">
+                                {% for item in timeline %}
+                                <li>
+                                    <div class="relative pb-8">
+                                        {% if not loop.last %}
+                                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                        {% endif %}
+                                        <div class="relative flex space-x-3">
+                                            <div>
+                                                {% if item.type == 'chat' %}
+                                                <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                                                    </svg>
+                                                </span>
+                                                {% elif item.type == 'tool_finder' %}
+                                                <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                                    </svg>
+                                                </span>
+                                                {% elif item.type == 'browse' %}
+                                                <span class="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                                    </svg>
+                                                </span>
+                                                {% else %}
+                                                <span class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                    </svg>
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                                <div>
+                                                    <p class="text-sm text-gray-900">
+                                                        <span class="font-medium">{{ item.type | replace('_', ' ') | title }}</span>
+                                                        {% if item.query and item.query != '-' %}
+                                                        <span class="text-gray-500">: {{ item.query }}</span>
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                                <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                    {{ item.timestamp.strftime('%b %d, %H:%M') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% else %}
+                        <p class="text-gray-500 text-center py-8">No activity recorded yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Profile Management -->
+            <div class="space-y-6">
+                <!-- Edit Profile Form -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Edit Profile</h3>
+                    </div>
+                    <form action="/admin/users/{{ target_user.id }}/edit" method="POST" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                            <input type="email" name="email" value="{{ target_user.email }}" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                            <input type="text" name="username" value="{{ target_user.username }}" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+                            <input type="text" name="display_name" value="{{ target_user.display_name or '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organisation</label>
+                            <input type="text" name="organisation" value="{{ target_user.organisation or '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organisation Type</label>
+                            <select name="organisation_type"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select...</option>
+                                <option value="newsroom" {% if target_user.organisation_type == 'newsroom' %}selected{% endif %}>Newsroom</option>
+                                <option value="freelance" {% if target_user.organisation_type == 'freelance' %}selected{% endif %}>Freelance</option>
+                                <option value="ngo" {% if target_user.organisation_type == 'ngo' %}selected{% endif %}>NGO</option>
+                                <option value="academic" {% if target_user.organisation_type == 'academic' %}selected{% endif %}>Academic</option>
+                                <option value="other" {% if target_user.organisation_type == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <input type="text" name="role" value="{{ target_user.role or '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <input type="text" name="country" value="{{ target_user.country or '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">AI Experience Level</label>
+                            <select name="ai_experience_level"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select...</option>
+                                <option value="beginner" {% if target_user.ai_experience_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                <option value="intermediate" {% if target_user.ai_experience_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                <option value="advanced" {% if target_user.ai_experience_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Password Reset -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Reset Password</h3>
+                    </div>
+                    <form action="/admin/users/{{ target_user.id }}/reset-password" method="POST" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">New Password *</label>
+                            <input type="password" name="new_password" required minlength="8"
+                                   placeholder="Min 8 characters"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium"
+                                onclick="return confirm('Are you sure you want to reset this user\'s password?')">
+                            Reset Password
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Account Actions -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Account Actions</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <!-- Activate/Deactivate -->
+                        {% if target_user.id|string != user.id|string %}
+                        <form action="/admin/users/{{ target_user.id }}/toggle-active" method="POST">
+                            {% if target_user.is_active %}
+                            <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
+                                    onclick="return confirm('Deactivate this user? They will not be able to login.')">
+                                Deactivate Account
+                            </button>
+                            {% else %}
+                            <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                                    onclick="return confirm('Activate this user?')">
+                                Activate Account
+                            </button>
+                            {% endif %}
+                        </form>
+                        {% endif %}
+
+                        <!-- Promote/Demote -->
+                        {% if target_user.id|string != user.id|string %}
+                        {% if target_user.is_admin %}
+                        <form action="/admin/users/{{ target_user.id }}/demote" method="POST">
+                            <button type="submit" class="w-full px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium"
+                                    onclick="return confirm('Remove admin privileges from this user?')">
+                                Remove Admin
+                            </button>
+                        </form>
+                        {% else %}
+                        <form action="/admin/users/{{ target_user.id }}/promote" method="POST">
+                            <button type="submit" class="w-full px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50 text-sm font-medium"
+                                    onclick="return confirm('Grant admin privileges to this user?')">
+                                Make Admin
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <!-- Delete User -->
+                        <form action="/admin/users/{{ target_user.id }}/delete" method="POST" class="mt-4 pt-4 border-t border-gray-200">
+                            <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
+                                    onclick="return confirm('PERMANENTLY DELETE this user and all their data? This cannot be undone!')">
+                                Delete User Permanently
+                            </button>
+                        </form>
+                        {% else %}
+                        <p class="text-sm text-gray-500 text-center">This is your account</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Account Info -->
+                <div class="bg-gray-100 rounded-lg p-4 text-sm text-gray-600">
+                    <p><strong>Account ID:</strong> {{ target_user.id }}</p>
+                    <p><strong>Created:</strong> {{ target_user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

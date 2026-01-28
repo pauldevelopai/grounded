@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Insights - The AI Editorial Toolkit Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation (same as base.html) -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-lg font-bold text-blue-600 whitespace-nowrap">AI Toolkit</a>
+                    </div>
+                    <div class="hidden lg:ml-4 lg:flex lg:space-x-4">
+                        <a href="/tools" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Tools</a>
+                        <a href="/tools/finder" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Tool Finder</a>
+                        <a href="/tools/cdi" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">CDI</a>
+                        <a href="/clusters" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Clusters</a>
+                        <a href="/foundations" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Foundations</a>
+                        <a href="/sources" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Sources</a>
+                        <a href="/browse" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Browse</a>
+                        <a href="/toolkit" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">History</a>
+                        <a href="/strategy" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Strategy</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="hidden lg:flex lg:items-center lg:ml-4 flex-shrink-0">
+                        <span class="text-sm text-gray-700 mr-3">{{ user.display_name or user.email }}</span>
+                        <a href="/profile" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-3">Profile</a>
+                        <a href="/admin" class="text-sm font-medium text-blue-600 mr-3">Admin</a>
+                        <form action="/auth/logout" method="POST" style="display: inline;">
+                            <button type="submit" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Breadcrumb -->
+        <nav class="mb-6">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <li><a href="/admin" class="hover:text-gray-900">Dashboard</a></li>
+                <li>/</li>
+                <li><a href="/admin/users" class="hover:text-gray-900">Users</a></li>
+                <li>/</li>
+                <li><a href="/admin/users/{{ target_user.id }}" class="hover:text-gray-900">{{ target_user.username }}</a></li>
+                <li>/</li>
+                <li class="text-gray-900">AI Insights</li>
+            </ol>
+        </nav>
+
+        <!-- User Header -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-bold text-gray-900">AI Insights for {{ target_user.display_name or target_user.username }}</h2>
+                    <p class="text-sm text-gray-500">Generated analysis of user engagement patterns</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Content -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">Engagement Analysis</h3>
+                <span class="text-xs text-gray-500">Generated just now</span>
+            </div>
+            <div class="p-6">
+                <div class="prose prose-sm max-w-none">
+                    {{ insights | replace('\n', '<br>') | safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="mt-6">
+            <a href="/admin/users/{{ target_user.id }}" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to user detail
+            </a>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <svg class="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-medium text-yellow-800">AI-Generated Content</h4>
+                    <p class="text-sm text-yellow-700 mt-1">
+                        These insights are generated by AI based on available user data. Use them as a starting point for understanding user engagement, not as definitive assessments.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

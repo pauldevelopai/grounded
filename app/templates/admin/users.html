@@ -6,26 +6,40 @@
     <title>User Management - The AI Editorial Toolkit Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <div class="flex items-center space-x-6">
-                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <nav class="flex space-x-4 text-sm">
-                    <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
-                    <a href="/toolkit" class="text-gray-600 hover:text-gray-900">Chat</a>
-                    <a href="/admin" class="text-blue-600 font-medium">Admin</a>
-                </nav>
-            </div>
-            <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-600">{{ user.username }} (Admin)</span>
-                <form action="/auth/logout" method="POST">
-                    <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">Logout</button>
-                </form>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation (same as base.html) -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-lg font-bold text-blue-600 whitespace-nowrap">AI Toolkit</a>
+                    </div>
+                    <div class="hidden lg:ml-4 lg:flex lg:space-x-4">
+                        <a href="/tools" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Tools</a>
+                        <a href="/tools/finder" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Tool Finder</a>
+                        <a href="/tools/cdi" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">CDI</a>
+                        <a href="/clusters" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Clusters</a>
+                        <a href="/foundations" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Foundations</a>
+                        <a href="/sources" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Sources</a>
+                        <a href="/browse" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Browse</a>
+                        <a href="/toolkit" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">History</a>
+                        <a href="/strategy" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">Strategy</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="hidden lg:flex lg:items-center lg:ml-4 flex-shrink-0">
+                        <span class="text-sm text-gray-700 mr-3">{{ user.display_name or user.email }}</span>
+                        <a href="/profile" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-3">Profile</a>
+                        <a href="/admin" class="text-sm font-medium text-blue-600 mr-3">Admin</a>
+                        <form action="/auth/logout" method="POST" style="display: inline;">
+                            <button type="submit" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md">Logout</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-    </header>
+    </nav>
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -37,6 +51,7 @@
                 <a href="/admin/users" class="px-4 py-2 bg-blue-600 text-white rounded-md">Users</a>
                 <a href="/admin/documents" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Documents</a>
                 <a href="/admin/analytics" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Analytics</a>
+                <a href="/admin/feedback" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Feedback</a>
             </nav>
         </div>
 
@@ -80,7 +95,7 @@
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">{{ u.username }}</div>
-                                        <div class="text-xs text-gray-500">ID: {{ u.id[:8] }}...</div>
+                                        <div class="text-xs text-gray-500">ID: {{ u.id|string|truncate(8, True, '') }}...</div>
                                     </div>
                                 </div>
                             </td>
@@ -102,8 +117,9 @@
                                 {{ u.created_at.strftime('%Y-%m-%d %H:%M') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="/admin/users/{{ u.id }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
                                 {% if u.is_admin %}
-                                    {% if u.id != user.id %}
+                                    {% if u.id|string != user.id|string %}
                                     <form action="/admin/users/{{ u.id }}/demote" method="POST" class="inline">
                                         <button type="submit"
                                                 class="text-red-600 hover:text-red-900"

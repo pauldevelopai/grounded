@@ -98,3 +98,18 @@ class StrategyPlan(Base):
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class AppFeedback(Base):
+    """Global app feedback from users."""
+
+    __tablename__ = "app_feedback"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    category = Column(String, nullable=False)  # bug, feature, question, other
+    message = Column(Text, nullable=False)
+    page_url = Column(String, nullable=True)  # Where feedback was submitted from
+    is_resolved = Column(Boolean, default=False, nullable=False)
+    admin_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)

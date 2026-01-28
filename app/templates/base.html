@@ -73,11 +73,6 @@
                         <a href="/toolkit" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                             History
                         </a>
-                        {% if user and user.is_admin %}
-                        <a href="/admin/documents/upload" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Upload
-                        </a>
-                        {% endif %}
                         <a href="/strategy" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
                             Strategy
                         </a>
@@ -123,9 +118,6 @@
                 <a href="/sources" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Sources</a>
                 <a href="/browse" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Browse</a>
                 <a href="/toolkit" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">History</a>
-                {% if user and user.is_admin %}
-                <a href="/admin/documents/upload" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Upload</a>
-                {% endif %}
                 <a href="/strategy" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Strategy</a>
             </div>
             <div class="pt-3 pb-3 border-t border-gray-200 px-4">
@@ -163,6 +155,60 @@
             </p>
         </div>
     </footer>
+
+    <!-- Feedback Widget (bottom-center) - only for logged in users -->
+    {% if user %}
+    <div id="feedback-widget" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9998;">
+        <!-- Feedback Panel -->
+        <div id="feedback-panel" class="hidden" style="width:320px;max-width:calc(100vw - 48px);">
+            <div class="bg-white rounded-lg shadow-2xl border border-gray-200">
+                <!-- Header -->
+                <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center">
+                    <span class="font-semibold text-sm">Send Feedback</span>
+                    <button onclick="toggleFeedbackPanel()" class="text-white hover:text-green-200 text-lg leading-none">&times;</button>
+                </div>
+
+                <!-- Form -->
+                <form id="feedback-form" class="p-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500">
+                            <option value="">Select a category...</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="question">Question</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea name="message" required rows="4" minlength="10" maxlength="2000" placeholder="Tell us what's on your mind..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Min 10 characters</p>
+                    </div>
+                    <input type="hidden" name="page_url" id="feedback-page-url">
+                    <div id="feedback-message" class="hidden text-sm"></div>
+                    <button type="submit" id="feedback-submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                        Submit Feedback
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Floating Button with Text -->
+        <button
+            id="feedback-fab"
+            onclick="toggleFeedbackPanel()"
+            class="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 flex items-center space-x-2 shadow-lg transition-transform"
+            title="Send Feedback"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+            </svg>
+            <span class="text-sm font-medium">Send Feedback</span>
+        </button>
+    </div>
+    {% endif %}
 
     <!-- Floating Chatbot Widget -->
     <div id="chat-widget" style="position:fixed;bottom:24px;right:24px;z-index:9999;">
@@ -311,6 +357,74 @@
         div.appendChild(document.createTextNode(text));
         return div.innerHTML;
     }
+
+    // Feedback widget functions
+    function toggleFeedbackPanel() {
+        var panel = document.getElementById('feedback-panel');
+        var fab = document.getElementById('feedback-fab');
+        if (!panel || !fab) return;
+
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+            fab.style.display = 'none';
+            // Set current page URL
+            var pageUrlInput = document.getElementById('feedback-page-url');
+            if (pageUrlInput) pageUrlInput.value = window.location.href;
+        } else {
+            fab.style.display = 'flex';
+        }
+    }
+
+    // Feedback form submission
+    (function() {
+        var feedbackForm = document.getElementById('feedback-form');
+        if (!feedbackForm) return;
+
+        feedbackForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var submitBtn = document.getElementById('feedback-submit');
+            var msgDiv = document.getElementById('feedback-message');
+            var formData = new FormData(feedbackForm);
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
+            submitBtn.textContent = 'Submitting...';
+            msgDiv.classList.add('hidden');
+
+            fetch('/feedback/submit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    msgDiv.textContent = data.message;
+                    msgDiv.className = 'text-sm text-green-600 bg-green-50 p-2 rounded';
+                    msgDiv.classList.remove('hidden');
+                    feedbackForm.reset();
+                    // Close panel after 2 seconds
+                    setTimeout(function() {
+                        toggleFeedbackPanel();
+                        msgDiv.classList.add('hidden');
+                    }, 2000);
+                } else {
+                    msgDiv.textContent = data.error || 'Something went wrong';
+                    msgDiv.className = 'text-sm text-red-600 bg-red-50 p-2 rounded';
+                    msgDiv.classList.remove('hidden');
+                }
+            })
+            .catch(function(err) {
+                msgDiv.textContent = 'Something went wrong. Please try again.';
+                msgDiv.className = 'text-sm text-red-600 bg-red-50 p-2 rounded';
+                msgDiv.classList.remove('hidden');
+            })
+            .finally(function() {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50');
+                submitBtn.textContent = 'Submit Feedback';
+            });
+        });
+    })();
     </script>
 
     {% block extra_scripts %}{% endblock %}

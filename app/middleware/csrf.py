@@ -39,6 +39,12 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             "/ready",
         }
 
+        # Path prefixes exempt from CSRF (protected by other auth mechanisms)
+        self.exempt_prefixes = [
+            "/admin/",   # Protected by require_admin dependency
+            "/feedback/",  # Protected by require_auth dependency
+        ]
+
     async def dispatch(self, request: Request, call_next):
         """Validate CSRF token for protected requests."""
         # Skip if method not protected
@@ -48,6 +54,11 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         # Skip if path is exempt
         if request.url.path in self.exempt_paths or request.url.path.startswith("/api/"):
             return await call_next(request)
+
+        # Skip if path matches exempt prefix
+        for prefix in self.exempt_prefixes:
+            if request.url.path.startswith(prefix):
+                return await call_next(request)
 
         # Check CSRF token
         token_from_form = await self._get_token_from_request(request)
