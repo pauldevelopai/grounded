@@ -20,16 +20,18 @@
                 <h1 class="text-3xl font-bold text-gray-900 mb-6">{{ section.title }}</h1>
 
                 <!-- Content rendered as paragraphs -->
-                <div class="text-gray-700 leading-relaxed space-y-4">
+                <div class="text-gray-700 leading-relaxed space-y-3">
                     {% set paragraphs = section.content.split('\n') %}
                     {% for para in paragraphs %}
                         {% if para.strip() %}
-                            {% if para.strip().startswith('●') or para.strip().startswith('○') or para.strip().startswith('-') %}
-                                <div class="pl-6 py-1 text-gray-600">{{ para.strip() }}</div>
+                            {% if para.strip().startswith('## ') %}
+                                <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-1">{{ para.strip()[3:] }}</h3>
+                            {% elif para.strip().startswith('●') or para.strip().startswith('○') or para.strip().startswith('-') %}
+                                <div class="pl-6 py-1 text-gray-600">{{ para.strip()|linkify }}</div>
                             {% elif para.strip()[0:1].isdigit() and (')' in para.strip()[:4] or '.' in para.strip()[:4] or ':' in para.strip()[:4]) %}
-                                <div class="pl-4 py-1 font-medium text-gray-800">{{ para.strip() }}</div>
+                                <div class="pl-4 py-1 font-medium text-gray-800">{{ para.strip()|linkify }}</div>
                             {% else %}
-                                <p>{{ para.strip() }}</p>
+                                <p>{{ para.strip()|linkify }}</p>
                             {% endif %}
                         {% endif %}
                     {% endfor %}
@@ -54,7 +56,7 @@
                         </a>
                         {% endif %}
                         {% if section.slug == 'glossary' %}
-                        <a href="/toolkit" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="javascript:void(0)" onclick="toggleChatPanel()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
                             Ask a question about any term &rarr;
                         </a>
                         {% endif %}
@@ -117,9 +119,9 @@
                     <a href="/tools/finder" class="block text-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition">
                         Find the Right Tool
                     </a>
-                    <a href="/toolkit" class="block text-center px-4 py-2 mt-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition">
+                    <button onclick="toggleChatPanel()" class="w-full block text-center px-4 py-2 mt-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition cursor-pointer">
                         Ask a Question
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>

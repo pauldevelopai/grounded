@@ -1,4 +1,6 @@
 """Foundation content routes (glossary, ethics, CDI guide, etc.)."""
+import re
+from markupsafe import Markup
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
@@ -11,6 +13,29 @@ from app.services.kit_loader import get_all_foundations, get_foundation
 
 router = APIRouter(prefix="/foundations", tags=["foundations"])
 templates = Jinja2Templates(directory="app/templates")
+
+_URL_RE = re.compile(r'(https?://\S+)')
+
+
+def _linkify(text: str) -> Markup:
+    """Convert URLs in text to clickable links (after HTML-escaping the rest)."""
+    parts = _URL_RE.split(str(text))
+    result = []
+    for i, part in enumerate(parts):
+        if i % 2 == 1:  # URL match
+            url = part.rstrip(".,;:)")
+            trailing = part[len(url):]
+            result.append(
+                f'<a href="{Markup.escape(url)}" target="_blank" rel="noopener" '
+                f'class="text-blue-600 hover:text-blue-800 underline break-all">'
+                f'{Markup.escape(url)}</a>{Markup.escape(trailing)}'
+            )
+        else:
+            result.append(str(Markup.escape(part)))
+    return Markup("".join(result))
+
+
+templates.env.filters["linkify"] = _linkify
 
 
 @router.get("", response_class=HTMLResponse)
