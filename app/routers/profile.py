@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.auth import User
-from app.models.toolkit import UserActivity
 from app.dependencies import require_auth_page
 from app.middleware.csrf import CSRFProtectionMiddleware
 
@@ -24,21 +23,8 @@ async def profile_page(
     user: User = Depends(require_auth_page),
     db: Session = Depends(get_db),
 ):
-    """Profile page with activity summary."""
+    """Profile page."""
     csrf_token = CSRFProtectionMiddleware.generate_token()
-
-    # Get activity summary for display
-    activities = db.query(UserActivity).filter(
-        UserActivity.user_id == user.id
-    ).order_by(UserActivity.created_at.desc()).limit(50).all()
-
-    activity_summary = {
-        "total": len(activities),
-        "tool_searches": len([a for a in activities if a.activity_type == 'tool_search']),
-        "tool_finder": len([a for a in activities if a.activity_type == 'tool_finder']),
-        "browse_views": len([a for a in activities if a.activity_type == 'browse']),
-        "recent_queries": [a.query for a in activities if a.query][:5]
-    }
 
     template_response = templates.TemplateResponse(
         "profile.html",
@@ -47,7 +33,6 @@ async def profile_page(
             "user": user,
             "csrf_token": csrf_token,
             "success": success,
-            "activity_summary": activity_summary,
         }
     )
     CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
