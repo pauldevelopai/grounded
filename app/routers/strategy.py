@@ -10,6 +10,7 @@ from app.models.auth import User
 from app.models.toolkit import StrategyPlan, UserActivity
 from app.dependencies import require_auth_page
 from app.services.strategy import generate_strategy_plan, export_plan_to_markdown
+from app.middleware.csrf import CSRFProtectionMiddleware
 
 
 router = APIRouter(prefix="/strategy", tags=["strategy"])
@@ -25,6 +26,8 @@ async def strategy_wizard(
     """
     Strategy page - shows profile status and generates from profile.
     """
+    csrf_token = CSRFProtectionMiddleware.generate_token()
+
     # Count user activities
     activity_count = db.query(UserActivity).filter(
         UserActivity.user_id == user.id
@@ -35,15 +38,18 @@ async def strategy_wizard(
         StrategyPlan.user_id == user.id
     ).order_by(StrategyPlan.created_at.desc()).limit(5).all()
 
-    return templates.TemplateResponse(
+    template_response = templates.TemplateResponse(
         "strategy/wizard.html",
         {
             "request": request,
             "user": user,
+            "csrf_token": csrf_token,
             "activity_count": activity_count,
             "previous_strategies": previous_strategies
         }
     )
+    CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
+    return template_response
 
 
 @router.post("/generate", response_class=HTMLResponse)
@@ -56,12 +62,7 @@ async def generate_strategy(
     """
     Generate strategy plan from user profile.
     """
-    # Check profile is complete
-    if not all([user.role, user.organisation_type, user.risk_level,
-                user.data_sensitivity, user.budget, user.deployment_pref]):
-        return RedirectResponse(url="/profile", status_code=303)
-
-    # Build inputs from user profile
+    # Build inputs from user profile (use defaults if not set)
     use_cases = user.use_cases.split(',') if user.use_cases else []
     inputs = {
         "role": user.role,

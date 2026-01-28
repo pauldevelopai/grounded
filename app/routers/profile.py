@@ -1,4 +1,5 @@
 """User profile routes."""
+import logging
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -10,6 +11,7 @@ from app.models.auth import User
 from app.dependencies import require_auth_page
 from app.middleware.csrf import CSRFProtectionMiddleware
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["profile"])
 templates = Jinja2Templates(directory="app/templates")
@@ -26,11 +28,16 @@ async def profile_page(
     """Profile page."""
     csrf_token = CSRFProtectionMiddleware.generate_token()
 
+    # Re-fetch user from current db session to get latest data
+    db_user = db.query(User).filter(User.id == user.id).first()
+    if not db_user:
+        db_user = user  # Fallback to session user
+
     template_response = templates.TemplateResponse(
         "profile.html",
         {
             "request": request,
-            "user": user,
+            "user": db_user,
             "csrf_token": csrf_token,
             "success": success,
         }
@@ -49,6 +56,14 @@ async def update_profile(
     country: Optional[str] = Form(None),
     interests: Optional[str] = Form(None),
     ai_experience_level: Optional[str] = Form(None),
+    # Bio and social links
+    bio: Optional[str] = Form(None),
+    website: Optional[str] = Form(None),
+    twitter: Optional[str] = Form(None),
+    linkedin: Optional[str] = Form(None),
+    # Organisation details
+    organisation_website: Optional[str] = Form(None),
+    organisation_notes: Optional[str] = Form(None),
     # Strategy preference fields
     risk_level: Optional[str] = Form(None),
     data_sensitivity: Optional[str] = Form(None),
@@ -59,22 +74,44 @@ async def update_profile(
     db: Session = Depends(get_db),
 ):
     """Update user profile including strategy preferences."""
+    logger.info(f"Updating profile for user {user.id}")
+    logger.info(f"Form data: display_name={display_name}, role={role}, organisation={organisation}")
+
+    # Re-fetch user in this session to ensure we can update it
+    db_user = db.query(User).filter(User.id == user.id).first()
+    if not db_user:
+        logger.error(f"User {user.id} not found in database")
+        return RedirectResponse(url="/login", status_code=303)
+
+    logger.info(f"Found user in db: {db_user.email}")
+
     # Basic profile fields
-    user.display_name = display_name.strip() if display_name else None
-    user.organisation = organisation.strip() if organisation else None
-    user.organisation_type = organisation_type if organisation_type else None
-    user.role = role.strip() if role else None
-    user.country = country.strip() if country else None
-    user.interests = interests.strip() if interests else None
-    user.ai_experience_level = ai_experience_level if ai_experience_level else None
+    db_user.display_name = display_name.strip() if display_name else None
+    db_user.organisation = organisation.strip() if organisation else None
+    db_user.organisation_type = organisation_type if organisation_type else None
+    db_user.role = role.strip() if role else None
+    db_user.country = country.strip() if country else None
+    db_user.interests = interests.strip() if interests else None
+    db_user.ai_experience_level = ai_experience_level if ai_experience_level else None
+
+    # Bio and social links
+    db_user.bio = bio.strip() if bio else None
+    db_user.website = website.strip() if website else None
+    db_user.twitter = twitter.strip().lstrip('@') if twitter else None  # Remove @ if included
+    db_user.linkedin = linkedin.strip() if linkedin else None
+
+    # Organisation details
+    db_user.organisation_website = organisation_website.strip() if organisation_website else None
+    db_user.organisation_notes = organisation_notes.strip() if organisation_notes else None
 
     # Strategy preference fields
-    user.risk_level = risk_level if risk_level else None
-    user.data_sensitivity = data_sensitivity if data_sensitivity else None
-    user.budget = budget if budget else None
-    user.deployment_pref = deployment_pref if deployment_pref else None
-    user.use_cases = ','.join(use_cases) if use_cases else None
+    db_user.risk_level = risk_level if risk_level else None
+    db_user.data_sensitivity = data_sensitivity if data_sensitivity else None
+    db_user.budget = budget if budget else None
+    db_user.deployment_pref = deployment_pref if deployment_pref else None
+    db_user.use_cases = ','.join(use_cases) if use_cases else None
 
     db.commit()
+    logger.info(f"Profile updated for user {db_user.email}: display_name={db_user.display_name}, role={db_user.role}")
 
     return RedirectResponse(url="/profile?success=1", status_code=303)

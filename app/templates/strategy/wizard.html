@@ -35,36 +35,28 @@
         </div>
     </div>
     {% else %}
-    <!-- Profile Incomplete - Show Warning -->
-    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-6">
+    <!-- Profile Incomplete - Show Suggestion -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
         <div class="flex items-start justify-between">
             <div>
-                <h2 class="text-lg font-semibold text-yellow-900 mb-2">Complete Your Profile</h2>
-                <p class="text-sm text-yellow-700 mb-4">
-                    To generate a personalized AI implementation strategy, please complete your profile with your organization details and preferences.
+                <h2 class="text-lg font-semibold text-blue-900 mb-2">Enhance Your Strategy</h2>
+                <p class="text-sm text-blue-700 mb-3">
+                    For a more personalized strategy, consider completing your profile. You can still generate a strategy without it.
                 </p>
-                <div class="text-sm text-yellow-800">
-                    <strong>Missing:</strong>
-                    {% if not user.role %}Role, {% endif %}
-                    {% if not user.organisation_type %}Organisation Type, {% endif %}
-                    {% if not user.risk_level %}Risk Level, {% endif %}
-                    {% if not user.data_sensitivity %}Data Sensitivity, {% endif %}
-                    {% if not user.budget %}Budget, {% endif %}
-                    {% if not user.deployment_pref %}Deployment Preference{% endif %}
-                </div>
+                <a href="/profile" class="inline-flex items-center text-sm text-blue-700 hover:text-blue-900 font-medium">
+                    Complete Profile
+                    <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
             </div>
         </div>
-        <a href="/profile" class="mt-4 inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium">
-            Complete Profile
-            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-        </a>
     </div>
     {% endif %}
 
     <!-- Generate Strategy Form -->
     <form method="POST" action="/strategy/generate" class="bg-white rounded-lg shadow p-8">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Generate Strategy</h2>
         <p class="text-gray-600 mb-6">
             We'll analyze The AI Editorial Toolkit content and create a customized implementation plan based on your profile and activity.
@@ -91,14 +83,9 @@
         <!-- Generate Button -->
         <button
             type="submit"
-            {% if not profile_complete %}disabled{% endif %}
-            class="w-full bg-blue-600 text-white px-6 py-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium text-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="w-full bg-blue-600 text-white px-6 py-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium text-lg"
         >
-            {% if profile_complete %}
             Generate AI Implementation Strategy
-            {% else %}
-            Complete Profile to Generate Strategy
-            {% endif %}
         </button>
         <p class="text-xs text-gray-500 mt-3 text-center">
             This may take 10-30 seconds. Your strategy will be saved to your history.

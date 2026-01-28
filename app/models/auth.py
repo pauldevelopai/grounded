@@ -35,6 +35,14 @@ class User(Base):
     deployment_pref = Column(String, nullable=True)  # cloud, hybrid, sovereign
     use_cases = Column(Text, nullable=True)  # comma-separated list
 
+    # Additional info
+    bio = Column(Text, nullable=True)  # User bio/notes
+    website = Column(String, nullable=True)
+    twitter = Column(String, nullable=True)  # Twitter/X handle
+    linkedin = Column(String, nullable=True)  # LinkedIn URL
+    organisation_website = Column(String, nullable=True)
+    organisation_notes = Column(Text, nullable=True)
+
 
 class Session(Base):
     """User session for cookie-based auth."""

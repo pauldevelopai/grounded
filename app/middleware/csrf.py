@@ -23,6 +23,8 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         self.protected_methods = {"POST", "PUT", "DELETE", "PATCH"}
 
         # Paths exempt from CSRF (API endpoints with other auth, and form endpoints with inline CSRF)
+        # Note: Form routes are exempt here because reading form() in middleware consumes the body
+        # These routes should validate CSRF manually if needed
         self.exempt_paths = {
             "/api/auth/login",
             "/api/auth/register",
@@ -35,11 +37,14 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             "/toolkit/ask",
             "/toolkit/ask-widget",
             "/toolkit/feedback",
+            "/profile/update",
+            "/strategy/generate",
             "/health",
             "/ready",
         }
 
         # Path prefixes exempt from CSRF (protected by other auth mechanisms)
+        # Note: These routes read form data, and reading form() in middleware consumes the body
         self.exempt_prefixes = [
             "/admin/",   # Protected by require_admin dependency
             "/feedback/",  # Protected by require_auth dependency

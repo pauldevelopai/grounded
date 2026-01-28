@@ -226,6 +226,19 @@ async def edit_user(
     role: str = Form(None),
     country: str = Form(None),
     ai_experience_level: str = Form(None),
+    # New profile fields
+    interests: str = Form(None),
+    bio: str = Form(None),
+    website: str = Form(None),
+    twitter: str = Form(None),
+    linkedin: str = Form(None),
+    organisation_website: str = Form(None),
+    organisation_notes: str = Form(None),
+    # Strategy preferences
+    risk_level: str = Form(None),
+    data_sensitivity: str = Form(None),
+    budget: str = Form(None),
+    deployment_pref: str = Form(None),
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
@@ -251,13 +264,28 @@ async def edit_user(
             raise HTTPException(status_code=400, detail="Username already in use")
         target_user.username = username
 
-    # Update other fields
+    # Update basic fields
     target_user.display_name = display_name or None
     target_user.organisation = organisation or None
     target_user.organisation_type = organisation_type or None
     target_user.role = role or None
     target_user.country = country or None
     target_user.ai_experience_level = ai_experience_level or None
+    target_user.interests = interests or None
+
+    # Update social/bio fields
+    target_user.bio = bio or None
+    target_user.website = website or None
+    target_user.twitter = twitter.lstrip('@') if twitter else None
+    target_user.linkedin = linkedin or None
+    target_user.organisation_website = organisation_website or None
+    target_user.organisation_notes = organisation_notes or None
+
+    # Update strategy preferences
+    target_user.risk_level = risk_level or None
+    target_user.data_sensitivity = data_sensitivity or None
+    target_user.budget = budget or None
+    target_user.deployment_pref = deployment_pref or None
 
     db.commit()
 
