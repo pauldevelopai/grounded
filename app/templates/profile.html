@@ -126,6 +126,115 @@
             </select>
         </div>
 
+        <!-- Strategy Preferences Section -->
+        <div class="pt-6 border-t">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">AI Strategy Preferences</h3>
+            <p class="text-sm text-gray-600 mb-4">These preferences are used when generating your AI implementation strategy. They'll be pre-filled in the Strategy Builder.</p>
+
+            <!-- Risk Level -->
+            <div class="mb-4">
+                <label for="risk_level" class="block text-sm font-medium text-gray-700 mb-2">
+                    Risk Tolerance
+                </label>
+                <select
+                    id="risk_level"
+                    name="risk_level"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select risk level...</option>
+                    <option value="low" {{ 'selected' if user.risk_level == 'low' else '' }}>Low (Conservative, highly regulated)</option>
+                    <option value="medium" {{ 'selected' if user.risk_level == 'medium' else '' }}>Medium (Balanced approach)</option>
+                    <option value="high" {{ 'selected' if user.risk_level == 'high' else '' }}>High (Innovation-focused)</option>
+                </select>
+            </div>
+
+            <!-- Data Sensitivity -->
+            <div class="mb-4">
+                <label for="data_sensitivity" class="block text-sm font-medium text-gray-700 mb-2">
+                    Data Sensitivity
+                </label>
+                <select
+                    id="data_sensitivity"
+                    name="data_sensitivity"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select data sensitivity...</option>
+                    <option value="public" {{ 'selected' if user.data_sensitivity == 'public' else '' }}>Public (No sensitive data)</option>
+                    <option value="internal" {{ 'selected' if user.data_sensitivity == 'internal' else '' }}>Internal (Business confidential)</option>
+                    <option value="pii" {{ 'selected' if user.data_sensitivity == 'pii' else '' }}>Personal Identifiable Information (PII)</option>
+                    <option value="regulated" {{ 'selected' if user.data_sensitivity == 'regulated' else '' }}>Regulated (HIPAA, GDPR, etc.)</option>
+                </select>
+            </div>
+
+            <!-- Budget -->
+            <div class="mb-4">
+                <label for="budget" class="block text-sm font-medium text-gray-700 mb-2">
+                    Budget Range
+                </label>
+                <select
+                    id="budget"
+                    name="budget"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select budget range...</option>
+                    <option value="minimal" {{ 'selected' if user.budget == 'minimal' else '' }}>Minimal ($0-$1k/month)</option>
+                    <option value="small" {{ 'selected' if user.budget == 'small' else '' }}>Small ($1k-$10k/month)</option>
+                    <option value="medium" {{ 'selected' if user.budget == 'medium' else '' }}>Medium ($10k-$50k/month)</option>
+                    <option value="large" {{ 'selected' if user.budget == 'large' else '' }}>Large ($50k+/month)</option>
+                </select>
+            </div>
+
+            <!-- Deployment Preference -->
+            <div class="mb-4">
+                <label for="deployment_pref" class="block text-sm font-medium text-gray-700 mb-2">
+                    Deployment Preference
+                </label>
+                <select
+                    id="deployment_pref"
+                    name="deployment_pref"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select deployment...</option>
+                    <option value="cloud" {{ 'selected' if user.deployment_pref == 'cloud' else '' }}>Cloud (SaaS, easy to deploy)</option>
+                    <option value="hybrid" {{ 'selected' if user.deployment_pref == 'hybrid' else '' }}>Hybrid (Mix of cloud and on-premise)</option>
+                    <option value="sovereign" {{ 'selected' if user.deployment_pref == 'sovereign' else '' }}>Sovereign (On-premise, data residency)</option>
+                </select>
+            </div>
+
+            <!-- Use Cases -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Primary Use Cases
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="content_generation" class="mr-2" {{ 'checked' if user.use_cases and 'content_generation' in user.use_cases else '' }}>
+                        <span class="text-sm">Content Generation</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="code_assistance" class="mr-2" {{ 'checked' if user.use_cases and 'code_assistance' in user.use_cases else '' }}>
+                        <span class="text-sm">Code Assistance</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="data_analysis" class="mr-2" {{ 'checked' if user.use_cases and 'data_analysis' in user.use_cases else '' }}>
+                        <span class="text-sm">Data Analysis</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="customer_support" class="mr-2" {{ 'checked' if user.use_cases and 'customer_support' in user.use_cases else '' }}>
+                        <span class="text-sm">Customer Support</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="research" class="mr-2" {{ 'checked' if user.use_cases and 'research' in user.use_cases else '' }}>
+                        <span class="text-sm">Research & Analysis</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="use_cases" value="automation" class="mr-2" {{ 'checked' if user.use_cases and 'automation' in user.use_cases else '' }}>
+                        <span class="text-sm">Process Automation</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- Submit -->
         <div class="pt-4 border-t">
             <button
@@ -136,6 +245,59 @@
             </button>
         </div>
     </form>
+
+    <!-- Activity Summary -->
+    <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Your Activity</h3>
+            <span class="text-xs text-gray-500">Used for personalized strategy recommendations</span>
+        </div>
+
+        {% if activity_summary and activity_summary.total > 0 %}
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="bg-blue-50 rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-blue-600">{{ activity_summary.tool_searches }}</div>
+                <div class="text-xs text-gray-600">Tool Searches</div>
+            </div>
+            <div class="bg-green-50 rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-green-600">{{ activity_summary.tool_finder }}</div>
+                <div class="text-xs text-gray-600">Tool Finder Uses</div>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-purple-600">{{ activity_summary.browse_views }}</div>
+                <div class="text-xs text-gray-600">Pages Browsed</div>
+            </div>
+        </div>
+
+        {% if activity_summary.recent_queries %}
+        <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Recent Searches</h4>
+            <div class="flex flex-wrap gap-2">
+                {% for query in activity_summary.recent_queries %}
+                <span class="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600">{{ query }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p class="text-sm text-blue-800 mb-3">
+                Your activity history helps us generate personalized AI implementation strategies based on your interests and the tools you've explored.
+            </p>
+            <a href="/strategy" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+                Generate Strategy Plan
+                <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+        {% else %}
+        <div class="bg-gray-50 rounded-lg p-6 text-center">
+            <p class="text-gray-600 mb-3">No activity yet. Start exploring tools and clusters to build your activity history.</p>
+            <a href="/tools" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Browse Tools &rarr;</a>
+        </div>
+        {% endif %}
+    </div>
 
     <!-- Account Info -->
     <div class="bg-white rounded-lg shadow p-6 mt-6">
