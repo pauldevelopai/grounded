@@ -14,6 +14,7 @@ from app.dependencies import require_admin
 from app.models.auth import User
 from app.services.auth import hash_password
 from app.models.toolkit import ToolkitDocument, ToolkitChunk, ChatLog, Feedback, UserActivity, AppFeedback
+from app.models.review import ToolReview, ReviewVote, ReviewFlag
 from app.services.ingestion import ingest_document, reindex_document, ingest_from_kit
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -46,6 +47,12 @@ async def admin_dashboard(
     app_feedback_count = db.query(func.count(AppFeedback.id)).scalar()
     app_feedback_unresolved = db.query(func.count(AppFeedback.id)).filter(AppFeedback.is_resolved == False).scalar()
 
+    # Review stats
+    review_count = db.query(func.count(ToolReview.id)).scalar()
+    flagged_reviews_count = db.query(func.count(func.distinct(ReviewFlag.review_id))).filter(
+        ReviewFlag.is_resolved == False
+    ).scalar()
+
     stats = {
         "users": user_count,
         "admins": admin_count,
@@ -54,7 +61,9 @@ async def admin_dashboard(
         "chats": chat_count,
         "feedbacks": feedback_count,
         "app_feedbacks": app_feedback_count,
-        "app_feedbacks_unresolved": app_feedback_unresolved
+        "app_feedbacks_unresolved": app_feedback_unresolved,
+        "reviews": review_count,
+        "flagged_reviews": flagged_reviews_count
     }
 
     return templates.TemplateResponse(
@@ -946,3 +955,178 @@ async def analytics_dashboard(
         "admin/analytics.html",
         {"request": request, "user": user, "analytics": analytics}
     )
+
+
+# ============================================================================
+# REVIEW MODERATION
+# ============================================================================
+
+@router.get("/reviews", response_class=HTMLResponse)
+async def list_reviews(
+    request: Request,
+    filter: str = "all",
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    List all reviews with filter options for moderation.
+    """
+    from app.schemas.review import ReviewAuthor
+
+    # Base query
+    query = db.query(ToolReview)
+
+    if filter == "flagged":
+        # Reviews with unresolved flags
+        flagged_ids = db.query(ReviewFlag.review_id).filter(
+            ReviewFlag.is_resolved == False
+        ).distinct().subquery()
+        query = query.filter(ToolReview.id.in_(flagged_ids))
+    elif filter == "hidden":
+        query = query.filter(ToolReview.is_hidden == True)
+
+    reviews_raw = query.order_by(desc(ToolReview.created_at)).all()
+
+    # Enrich reviews with additional data
+    reviews = []
+    for review in reviews_raw:
+        # Count votes
+        helpful_count = db.query(func.count(ReviewVote.id)).filter(
+            ReviewVote.review_id == review.id,
+            ReviewVote.is_helpful == True
+        ).scalar() or 0
+
+        not_helpful_count = db.query(func.count(ReviewVote.id)).filter(
+            ReviewVote.review_id == review.id,
+            ReviewVote.is_helpful == False
+        ).scalar() or 0
+
+        # Count unresolved flags
+        flag_count = db.query(func.count(ReviewFlag.id)).filter(
+            ReviewFlag.review_id == review.id,
+            ReviewFlag.is_resolved == False
+        ).scalar() or 0
+
+        reviews.append({
+            "id": review.id,
+            "tool_slug": review.tool_slug,
+            "rating": review.rating,
+            "comment": review.comment,
+            "use_case_tag": review.use_case_tag,
+            "created_at": review.created_at,
+            "updated_at": review.updated_at,
+            "is_hidden": review.is_hidden,
+            "hidden_reason": review.hidden_reason,
+            "author": ReviewAuthor(
+                id=review.user.id,
+                username=getattr(review.user, 'username', None),
+                display_name=getattr(review.user, 'display_name', None)
+            ),
+            "user_email": review.user.email,
+            "helpful_count": helpful_count,
+            "not_helpful_count": not_helpful_count,
+            "flag_count": flag_count
+        })
+
+    # Get counts for tabs
+    total_count = db.query(func.count(ToolReview.id)).scalar()
+    flagged_ids_subq = db.query(ReviewFlag.review_id).filter(
+        ReviewFlag.is_resolved == False
+    ).distinct().subquery()
+    flagged_count = db.query(func.count(ToolReview.id)).filter(
+        ToolReview.id.in_(flagged_ids_subq)
+    ).scalar()
+    hidden_count = db.query(func.count(ToolReview.id)).filter(ToolReview.is_hidden == True).scalar()
+
+    return templates.TemplateResponse(
+        "admin/reviews.html",
+        {
+            "request": request,
+            "user": user,
+            "reviews": reviews,
+            "current_filter": filter,
+            "counts": {
+                "all": total_count,
+                "flagged": flagged_count,
+                "hidden": hidden_count
+            }
+        }
+    )
+
+
+@router.post("/reviews/{review_id}/hide")
+async def hide_review(
+    review_id: str,
+    reason: str = Form(...),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Hide a review with a reason.
+    """
+    review = db.query(ToolReview).filter(ToolReview.id == review_id).first()
+
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review.is_hidden = True
+    review.hidden_reason = reason
+
+    # Mark all flags as resolved
+    db.query(ReviewFlag).filter(ReviewFlag.review_id == review_id).update({
+        "is_resolved": True,
+        "resolved_by": admin_user.id,
+        "resolved_at": datetime.now(timezone.utc),
+        "resolution_notes": f"Review hidden: {reason}"
+    })
+
+    db.commit()
+
+    return RedirectResponse(url="/admin/reviews", status_code=303)
+
+
+@router.post("/reviews/{review_id}/restore")
+async def restore_review(
+    review_id: str,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Restore a hidden review.
+    """
+    review = db.query(ToolReview).filter(ToolReview.id == review_id).first()
+
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    review.is_hidden = False
+    review.hidden_reason = None
+    db.commit()
+
+    return RedirectResponse(url="/admin/reviews", status_code=303)
+
+
+@router.get("/reviews/{review_id}/flags")
+async def get_review_flags(
+    review_id: str,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all flags for a review.
+    """
+    flags = db.query(ReviewFlag).filter(
+        ReviewFlag.review_id == review_id
+    ).order_by(desc(ReviewFlag.created_at)).all()
+
+    return [
+        {
+            "id": str(flag.id),
+            "reason": flag.reason,
+            "details": flag.details,
+            "created_at": flag.created_at.isoformat(),
+            "user_id": str(flag.user_id),
+            "is_resolved": flag.is_resolved
+        }
+        for flag in flags
+    ]

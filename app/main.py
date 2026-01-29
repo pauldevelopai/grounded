@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from app.routers import health, admin, rag, auth_routes, toolkit, browse, strategy, tools, clusters, foundations, sources, profile, feedback
+from app.routers import health, admin, rag, auth_routes, toolkit, browse, strategy, tools, clusters, foundations, sources, profile, feedback, reviews
 from app.dependencies import get_current_user
 from app.models.auth import User
 from app.settings import settings
@@ -82,6 +82,7 @@ app.include_router(foundations.router)
 app.include_router(sources.router)
 app.include_router(profile.router)
 app.include_router(feedback.router)
+app.include_router(reviews.router)
 
 
 @app.get("/", response_class=HTMLResponse)

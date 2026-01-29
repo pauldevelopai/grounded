@@ -264,6 +264,190 @@
             </div>
             {% endif %}
 
+            <!-- Reviews Section -->
+            <div class="bg-white rounded-lg shadow p-6" id="reviews-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">User Reviews</h2>
+                    <div id="rating-summary" class="flex items-center gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Rating Stats -->
+                <div id="rating-stats" class="mb-6 p-4 bg-gray-50 rounded-lg" style="display: none;">
+                    <div class="flex items-start gap-6">
+                        <div class="text-center">
+                            <div id="avg-rating-display" class="text-4xl font-bold text-gray-900">-</div>
+                            <div id="avg-stars-display" class="text-yellow-500 text-lg">
+                                <!-- Stars populated by JS -->
+                            </div>
+                            <div id="total-reviews-display" class="text-sm text-gray-500 mt-1">0 reviews</div>
+                        </div>
+                        <div class="flex-1">
+                            <div id="rating-distribution" class="space-y-1">
+                                {% for i in range(5, 0, -1) %}
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="w-3 text-gray-600">{{ i }}</span>
+                                    <span class="text-yellow-500">&#9733;</span>
+                                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="dist-bar-{{ i }}" class="h-full bg-yellow-500 transition-all" style="width: 0%"></div>
+                                    </div>
+                                    <span id="dist-count-{{ i }}" class="w-8 text-right text-gray-500">0</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review Form -->
+                {% if user %}
+                <div id="review-form-container" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 id="review-form-title" class="text-sm font-semibold text-gray-900 mb-3">Write a Review</h3>
+                    <form id="review-form" class="space-y-4">
+                        <!-- Star Rating Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
+                            <div id="star-input" class="flex gap-1">
+                                {% for i in range(1, 6) %}
+                                <button type="button" onclick="setRating({{ i }})"
+                                        class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition cursor-pointer"
+                                        data-rating="{{ i }}">
+                                    &#9733;
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" id="rating-input" name="rating" required>
+                        </div>
+
+                        <!-- Use Case Tag -->
+                        <div>
+                            <label for="use-case-select" class="block text-sm font-medium text-gray-700 mb-1">Use Case (optional)</label>
+                            <select id="use-case-select" name="use_case_tag"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select a use case...</option>
+                                <option value="transcription">Transcription</option>
+                                <option value="fact-checking">Fact-checking</option>
+                                <option value="OSINT">OSINT</option>
+                                <option value="social-video">Social Video</option>
+                                <option value="newsletter">Newsletter</option>
+                                <option value="translation">Translation</option>
+                                <option value="data-scraping">Data Scraping</option>
+                                <option value="security">Security</option>
+                                <option value="audience-growth">Audience Growth</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Comment -->
+                        <div>
+                            <label for="comment-input" class="block text-sm font-medium text-gray-700 mb-1">Your Review (optional)</label>
+                            <textarea id="comment-input" name="comment" rows="4" maxlength="2000"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Share your experience with this tool..."></textarea>
+                            <div class="text-xs text-gray-500 mt-1"><span id="char-count">0</span>/2000 characters</div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex gap-2">
+                            <button type="submit" id="submit-review-btn"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Submit Review
+                            </button>
+                            <button type="button" id="cancel-edit-btn" onclick="cancelEdit()" style="display: none;"
+                                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300">
+                                Cancel
+                            </button>
+                            <button type="button" id="delete-review-btn" onclick="deleteMyReview()" style="display: none;"
+                                    class="bg-red-100 text-red-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-red-200">
+                                Delete Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                    <p class="text-gray-600 text-sm">
+                        <a href="/login?next={{ request.url.path }}" class="text-blue-600 hover:text-blue-800 font-medium">Login</a>
+                        to leave a review.
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Sort Options -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="text-sm text-gray-500">
+                        <span id="reviews-showing">Showing 0 reviews</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="sort-select" class="text-sm text-gray-600">Sort by:</label>
+                        <select id="sort-select" onchange="loadReviews(false)"
+                                class="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="recent">Most Recent</option>
+                            <option value="helpful">Most Helpful</option>
+                            <option value="rating_high">Highest Rated</option>
+                            <option value="rating_low">Lowest Rated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Reviews List -->
+                <div id="reviews-list" class="space-y-4">
+                    <!-- Reviews populated by JS -->
+                </div>
+
+                <!-- Load More -->
+                <div id="load-more-container" class="mt-4 text-center" style="display: none;">
+                    <button onclick="loadReviews(true)"
+                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        Load More Reviews
+                    </button>
+                </div>
+
+                <!-- Empty State -->
+                <div id="no-reviews" class="text-center py-8 text-gray-500" style="display: none;">
+                    <p>No reviews yet. Be the first to review this tool!</p>
+                </div>
+            </div>
+
+            <!-- Flag Review Modal -->
+            <div id="flag-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Flag Review</h3>
+                    <form id="flag-form">
+                        <input type="hidden" id="flag-review-id">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                            <select id="flag-reason" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select a reason...</option>
+                                <option value="spam">Spam</option>
+                                <option value="inappropriate">Inappropriate content</option>
+                                <option value="misleading">Misleading information</option>
+                                <option value="off-topic">Off-topic</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Details (optional)</label>
+                            <textarea id="flag-details" rows="3" maxlength="500"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Additional details..."></textarea>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" onclick="closeFlagModal()"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                                Submit Flag
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
 
         <!-- Sidebar (1/3) -->
@@ -372,4 +556,407 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Reviews state
+const TOOL_SLUG = '{{ tool.slug }}';
+const IS_LOGGED_IN = {{ 'true' if user else 'false' }};
+let currentPage = 1;
+let totalReviews = 0;
+let currentUserReviewId = null;
+let isEditMode = false;
+
+// Star rating input
+function setRating(rating) {
+    document.getElementById('rating-input').value = rating;
+    document.querySelectorAll('.star-btn').forEach((btn, idx) => {
+        if (idx < rating) {
+            btn.classList.remove('text-gray-300');
+            btn.classList.add('text-yellow-500');
+        } else {
+            btn.classList.remove('text-yellow-500');
+            btn.classList.add('text-gray-300');
+        }
+    });
+}
+
+// Generate star display
+function getStarsHtml(rating, size = 'text-sm') {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            html += `<span class="${size} text-yellow-500">&#9733;</span>`;
+        } else {
+            html += `<span class="${size} text-gray-300">&#9733;</span>`;
+        }
+    }
+    return html;
+}
+
+// Format date
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// Load reviews
+async function loadReviews(append = false) {
+    if (!append) {
+        currentPage = 1;
+    }
+
+    const sort = document.getElementById('sort-select').value;
+    const response = await fetch(`/api/reviews/tools/${TOOL_SLUG}?sort=${sort}&page=${currentPage}&per_page=10`);
+
+    if (!response.ok) {
+        console.error('Failed to load reviews');
+        return;
+    }
+
+    const data = await response.json();
+    totalReviews = data.total;
+
+    // Update rating stats
+    updateRatingStats(data);
+
+    // Render reviews
+    const container = document.getElementById('reviews-list');
+    const noReviews = document.getElementById('no-reviews');
+    const loadMore = document.getElementById('load-more-container');
+
+    if (!append) {
+        container.innerHTML = '';
+    }
+
+    if (data.reviews.length === 0 && !append) {
+        noReviews.style.display = 'block';
+        loadMore.style.display = 'none';
+    } else {
+        noReviews.style.display = 'none';
+
+        data.reviews.forEach(review => {
+            if (!append || !document.querySelector(`[data-review-id="${review.id}"]`)) {
+                container.appendChild(createReviewElement(review));
+            }
+        });
+
+        // Show/hide load more
+        const totalShown = container.children.length;
+        loadMore.style.display = totalShown < totalReviews ? 'block' : 'none';
+        document.getElementById('reviews-showing').textContent = `Showing ${totalShown} of ${totalReviews} reviews`;
+    }
+
+    if (append) {
+        currentPage++;
+    }
+}
+
+// Update rating statistics display
+function updateRatingStats(data) {
+    const statsContainer = document.getElementById('rating-stats');
+    const summaryContainer = document.getElementById('rating-summary');
+
+    if (data.total_reviews === 0 && totalReviews === 0) {
+        statsContainer.style.display = 'none';
+        summaryContainer.innerHTML = '<span class="text-sm text-gray-500">No reviews yet</span>';
+        return;
+    }
+
+    statsContainer.style.display = 'block';
+
+    // Average rating
+    const avgRating = data.average_rating || 0;
+    document.getElementById('avg-rating-display').textContent = avgRating.toFixed(1);
+    document.getElementById('avg-stars-display').innerHTML = getStarsHtml(Math.round(avgRating), 'text-lg');
+    document.getElementById('total-reviews-display').textContent = `${totalReviews} review${totalReviews !== 1 ? 's' : ''}`;
+
+    // Summary in header
+    summaryContainer.innerHTML = `
+        <span class="text-lg font-semibold">${avgRating.toFixed(1)}</span>
+        ${getStarsHtml(Math.round(avgRating))}
+        <span class="text-sm text-gray-500">(${totalReviews})</span>
+    `;
+
+    // Distribution bars
+    const dist = data.rating_distribution || {};
+    for (let i = 1; i <= 5; i++) {
+        const count = dist[String(i)] || 0;
+        const pct = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+        document.getElementById(`dist-bar-${i}`).style.width = `${pct}%`;
+        document.getElementById(`dist-count-${i}`).textContent = count;
+    }
+}
+
+// Create review element
+function createReviewElement(review) {
+    const div = document.createElement('div');
+    div.setAttribute('data-review-id', review.id);
+    div.className = 'border border-gray-200 rounded-lg p-4' + (review.is_hidden ? ' opacity-50 bg-gray-50' : '');
+
+    const authorName = review.author.display_name || review.author.username || 'Anonymous';
+    const useCaseBadge = review.use_case_tag
+        ? `<span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">${review.use_case_tag.replace('-', ' ')}</span>`
+        : '';
+
+    let actionsHtml = '';
+    if (IS_LOGGED_IN) {
+        if (review.is_own_review) {
+            actionsHtml = `
+                <button onclick="editReview('${review.id}')" class="text-xs text-blue-600 hover:text-blue-800">Edit</button>
+            `;
+        } else {
+            actionsHtml = `
+                <button onclick="openFlagModal('${review.id}')" class="text-xs text-gray-400 hover:text-red-600">Flag</button>
+            `;
+        }
+    }
+
+    const voteHtml = IS_LOGGED_IN && !review.is_own_review ? `
+        <div class="flex items-center gap-2">
+            <button onclick="voteReview('${review.id}', true)"
+                    class="text-xs px-2 py-1 rounded ${review.user_vote === true ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-green-50'}">
+                Helpful (${review.helpful_count})
+            </button>
+            <button onclick="voteReview('${review.id}', false)"
+                    class="text-xs px-2 py-1 rounded ${review.user_vote === false ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600 hover:bg-red-50'}">
+                Not Helpful (${review.not_helpful_count})
+            </button>
+        </div>
+    ` : `
+        <div class="text-xs text-gray-500">
+            ${review.helpful_count} found helpful
+        </div>
+    `;
+
+    div.innerHTML = `
+        <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center gap-2">
+                ${getStarsHtml(review.rating)}
+                ${useCaseBadge}
+                ${review.is_hidden ? '<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">Hidden</span>' : ''}
+            </div>
+            ${actionsHtml}
+        </div>
+        <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <span class="font-medium">${authorName}</span>
+            <span class="text-gray-400">&middot;</span>
+            <span>${formatDate(review.created_at)}</span>
+        </div>
+        ${review.comment ? `<p class="text-sm text-gray-700 mb-3">${review.comment}</p>` : ''}
+        ${voteHtml}
+    `;
+
+    return div;
+}
+
+// Check for user's existing review
+async function checkUserReview() {
+    if (!IS_LOGGED_IN) return;
+
+    const response = await fetch(`/api/reviews/tools/${TOOL_SLUG}/my-review`);
+    if (response.ok) {
+        const review = await response.json();
+        if (review) {
+            currentUserReviewId = review.id;
+            enterEditMode(review);
+        }
+    }
+}
+
+// Enter edit mode
+function enterEditMode(review) {
+    isEditMode = true;
+    currentUserReviewId = review.id;
+
+    document.getElementById('review-form-title').textContent = 'Edit Your Review';
+    document.getElementById('submit-review-btn').textContent = 'Update Review';
+    document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+    document.getElementById('delete-review-btn').style.display = 'inline-block';
+
+    setRating(review.rating);
+    document.getElementById('use-case-select').value = review.use_case_tag || '';
+    document.getElementById('comment-input').value = review.comment || '';
+    updateCharCount();
+}
+
+// Cancel edit mode
+function cancelEdit() {
+    isEditMode = false;
+
+    document.getElementById('review-form-title').textContent = 'Write a Review';
+    document.getElementById('submit-review-btn').textContent = 'Submit Review';
+    document.getElementById('cancel-edit-btn').style.display = 'none';
+    document.getElementById('delete-review-btn').style.display = 'none';
+
+    // Reset form
+    setRating(0);
+    document.getElementById('rating-input').value = '';
+    document.getElementById('use-case-select').value = '';
+    document.getElementById('comment-input').value = '';
+    updateCharCount();
+}
+
+// Edit review
+async function editReview(reviewId) {
+    const response = await fetch(`/api/reviews/tools/${TOOL_SLUG}/my-review`);
+    if (response.ok) {
+        const review = await response.json();
+        if (review) {
+            enterEditMode(review);
+            // Scroll to form
+            document.getElementById('review-form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+}
+
+// Delete review
+async function deleteMyReview() {
+    if (!currentUserReviewId) return;
+
+    if (!confirm('Are you sure you want to delete your review? This cannot be undone.')) {
+        return;
+    }
+
+    const response = await fetch(`/api/reviews/tools/${TOOL_SLUG}/reviews/${currentUserReviewId}`, {
+        method: 'DELETE'
+    });
+
+    if (response.ok) {
+        currentUserReviewId = null;
+        cancelEdit();
+        loadReviews(false);
+    } else {
+        alert('Failed to delete review');
+    }
+}
+
+// Vote on review
+async function voteReview(reviewId, isHelpful) {
+    const response = await fetch(`/api/reviews/reviews/${reviewId}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_helpful: isHelpful })
+    });
+
+    if (response.ok) {
+        loadReviews(false);
+    }
+}
+
+// Flag modal
+function openFlagModal(reviewId) {
+    document.getElementById('flag-review-id').value = reviewId;
+    document.getElementById('flag-reason').value = '';
+    document.getElementById('flag-details').value = '';
+    document.getElementById('flag-modal').style.display = 'flex';
+}
+
+function closeFlagModal() {
+    document.getElementById('flag-modal').style.display = 'none';
+}
+
+// Character count
+function updateCharCount() {
+    const count = document.getElementById('comment-input').value.length;
+    document.getElementById('char-count').textContent = count;
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadReviews(false);
+    checkUserReview();
+
+    // Character counter
+    const commentInput = document.getElementById('comment-input');
+    if (commentInput) {
+        commentInput.addEventListener('input', updateCharCount);
+    }
+
+    // Review form submission
+    const reviewForm = document.getElementById('review-form');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const rating = document.getElementById('rating-input').value;
+            if (!rating) {
+                alert('Please select a rating');
+                return;
+            }
+
+            const data = {
+                rating: parseInt(rating),
+                comment: document.getElementById('comment-input').value || null,
+                use_case_tag: document.getElementById('use-case-select').value || null
+            };
+
+            let url = `/api/reviews/tools/${TOOL_SLUG}`;
+            let method = 'POST';
+
+            if (isEditMode && currentUserReviewId) {
+                url = `/api/reviews/tools/${TOOL_SLUG}/reviews/${currentUserReviewId}`;
+                method = 'PUT';
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                if (!isEditMode) {
+                    const review = await response.json();
+                    currentUserReviewId = review.id;
+                    enterEditMode(review);
+                }
+                loadReviews(false);
+            } else {
+                const error = await response.json();
+                alert(error.detail || 'Failed to submit review');
+            }
+        });
+    }
+
+    // Flag form submission
+    const flagForm = document.getElementById('flag-form');
+    if (flagForm) {
+        flagForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const reviewId = document.getElementById('flag-review-id').value;
+            const reason = document.getElementById('flag-reason').value;
+            const details = document.getElementById('flag-details').value;
+
+            if (!reason) {
+                alert('Please select a reason');
+                return;
+            }
+
+            const response = await fetch(`/api/reviews/reviews/${reviewId}/flag`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason, details: details || null })
+            });
+
+            if (response.ok) {
+                closeFlagModal();
+                alert('Review has been flagged for moderation');
+            } else {
+                const error = await response.json();
+                alert(error.detail || 'Failed to flag review');
+            }
+        });
+    }
+});
+
+// Close modal on click outside
+document.getElementById('flag-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFlagModal();
+    }
+});
+</script>
 {% endblock %}
