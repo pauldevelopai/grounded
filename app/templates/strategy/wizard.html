@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Strategy Builder - The AI Editorial Toolkit{% endblock %}
+{% block title %}Strategy Builder - {{ product_name }}{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-4 sm:px-0">
@@ -59,7 +59,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Generate Strategy</h2>
         <p class="text-gray-600 mb-6">
-            We'll analyze The AI Editorial Toolkit content and create a customized implementation plan based on your profile and activity.
+            We'll analyze {{ product_name }} content and create a customized implementation plan based on your profile and activity.
         </p>
 
         <!-- Activity History Option -->

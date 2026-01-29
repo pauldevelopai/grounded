@@ -3,18 +3,17 @@ import logging
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.auth import User
 from app.dependencies import require_auth_page
 from app.middleware.csrf import CSRFProtectionMiddleware
+from app.templates_engine import templates
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["profile"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/profile", response_class=HTMLResponse)

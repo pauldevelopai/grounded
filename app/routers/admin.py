@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Request, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
@@ -17,9 +16,9 @@ from app.models.toolkit import ToolkitDocument, ToolkitChunk, ChatLog, Feedback,
 from app.models.review import ToolReview, ReviewVote, ReviewFlag
 from app.models.discovery import DiscoveredTool
 from app.services.ingestion import ingest_document, reindex_document, ingest_from_kit
+from app.templates_engine import templates
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-templates = Jinja2Templates(directory="app/templates")
 
 # Data directory for uploads (persistent filesystem)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")

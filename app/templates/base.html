@@ -3,30 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}The AI Editorial Toolkit{% endblock %}</title>
+    <title>{% block title %}{{ product_name|default('Application') }}{% endblock %}</title>
 
     <!-- SEO & sharing meta -->
-    <meta name="description" content="{% block meta_description %}A practical toolkit for teaching AI in journalism education. Explore tools, clusters, and strategies for responsible AI adoption in the newsroom.{% endblock %}">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="{% block meta_description %}{{ product_description|default('') }}{% endblock %}">
+    <meta name="theme-color" content="{{ brand_primary_color|default('#2563eb') }}">
 
     <!-- Open Graph (Facebook, LinkedIn, WhatsApp, iMessage, Slack, etc.) -->
-    <meta property="og:site_name" content="The AI Editorial Toolkit">
-    <meta property="og:title" content="{% block og_title %}The AI Editorial Toolkit{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}A practical toolkit for teaching AI in journalism education. Explore tools, clusters, and strategies for responsible AI adoption in the newsroom.{% endblock %}">
+    <meta property="og:site_name" content="{{ product_name|default('Application') }}">
+    <meta property="og:title" content="{% block og_title %}{{ product_name|default('Application') }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ product_description|default('') }}{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_GB">
 
     <!-- Twitter / X Card -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="The AI Editorial Toolkit">
-    <meta name="twitter:description" content="A practical toolkit for teaching AI in journalism education.">
+    <meta name="twitter:title" content="{{ product_name|default('Application') }}">
+    <meta name="twitter:description" content="{{ product_description|default('') }}">
 
-    <!-- Favicon (inline SVG data URI so no extra file needed) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='system-ui,sans-serif' font-weight='bold'>AI</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='system-ui,sans-serif' font-weight='bold'>AI</text></svg>">
+    <!-- Favicon (inline SVG data URI) -->
+    {% set favicon_color = brand_primary_color|default('#2563eb')|replace('#', '%23') %}
+    {% set favicon_text = brand_logo_text|default('AI')|truncate(2, true, '') %}
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='{{ favicon_color }}'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='system-ui,sans-serif' font-weight='bold'>{{ favicon_text }}</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='{{ favicon_color }}'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='system-ui,sans-serif' font-weight='bold'>{{ favicon_text }}</text></svg>">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind with product colors
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '{{ brand_primary_color|default("#3B82F6") }}',
+                            secondary: '{{ brand_secondary_color|default("#1E40AF") }}',
+                            accent: '{{ brand_accent_color|default("#10B981") }}',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
@@ -34,6 +52,21 @@
     <style>
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: block; }
+        /* Brand color utilities using CSS custom properties */
+        :root {
+            --brand-primary: {{ brand_primary_color|default('#3B82F6') }};
+            --brand-secondary: {{ brand_secondary_color|default('#1E40AF') }};
+            --brand-accent: {{ brand_accent_color|default('#10B981') }};
+        }
+        .bg-brand-primary { background-color: var(--brand-primary); }
+        .bg-brand-secondary { background-color: var(--brand-secondary); }
+        .bg-brand-accent { background-color: var(--brand-accent); }
+        .text-brand-primary { color: var(--brand-primary); }
+        .text-brand-secondary { color: var(--brand-secondary); }
+        .text-brand-accent { color: var(--brand-accent); }
+        .border-brand-primary { border-color: var(--brand-primary); }
+        .hover\:bg-brand-secondary:hover { background-color: var(--brand-secondary); }
+        .hover\:text-brand-primary:hover { color: var(--brand-primary); }
     </style>
 
     {% block extra_head %}{% endblock %}
@@ -45,37 +78,22 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-lg font-bold text-blue-600 whitespace-nowrap">AI Toolkit</a>
+                        <a href="/" class="text-lg font-bold text-brand-primary whitespace-nowrap">
+                            {{ brand_logo_text|default('Application') }}
+                        </a>
+                        {% if edition_label and not edition_sealed %}
+                        <span class="ml-2 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded">{{ edition_label }}</span>
+                        {% elif edition_sealed %}
+                        <span class="ml-2 px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded" title="This edition is archived">{{ edition_label }} (Archived)</span>
+                        {% endif %}
                     </div>
                     <!-- Desktop nav -->
                     <div class="hidden lg:ml-4 lg:flex lg:space-x-4">
-                        <a href="/tools" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Tools
+                        {% for nav in nav_items|default([]) %}
+                        <a href="{{ nav.route }}" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-brand-primary">
+                            {{ nav.label }}
                         </a>
-                        <a href="/tools/finder" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Tool Finder
-                        </a>
-                        <a href="/tools/cdi" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            CDI
-                        </a>
-                        <a href="/clusters" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Clusters
-                        </a>
-                        <a href="/foundations" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Foundations
-                        </a>
-                        <a href="/sources" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Sources
-                        </a>
-                        <a href="/browse" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Browse
-                        </a>
-                        <a href="/toolkit" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            History
-                        </a>
-                        <a href="/strategy" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600">
-                            Strategy
-                        </a>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="flex items-center">
@@ -83,16 +101,16 @@
                     <div class="hidden lg:flex lg:items-center lg:ml-4 flex-shrink-0">
                         {% if user %}
                             <span class="text-sm text-gray-700 mr-3 truncate max-w-[150px]" title="{{ user.display_name or user.email }}">{{ user.display_name or user.email }}</span>
-                            <a href="/profile" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-3 whitespace-nowrap">Profile</a>
-                            {% if user.is_admin %}
-                                <a href="/admin" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-3 whitespace-nowrap">Admin</a>
+                            <a href="/profile" class="text-sm font-medium text-gray-900 hover:text-brand-primary mr-3 whitespace-nowrap">Profile</a>
+                            {% if user.is_admin and feature_admin|default(true) %}
+                                <a href="/admin" class="text-sm font-medium text-gray-900 hover:text-brand-primary mr-3 whitespace-nowrap">Admin</a>
                             {% endif %}
                             <form action="/auth/logout" method="POST" style="display: inline;">
-                                <button type="submit" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md whitespace-nowrap">Logout</button>
+                                <button type="submit" class="text-sm font-medium text-white bg-brand-primary hover:bg-brand-secondary px-3 py-2 rounded-md whitespace-nowrap">Logout</button>
                             </form>
                         {% else %}
-                            <a href="/login" class="text-sm font-medium text-gray-900 hover:text-blue-600 mr-3 whitespace-nowrap">Login</a>
-                            <a href="/register" class="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md whitespace-nowrap">Register</a>
+                            <a href="/login" class="text-sm font-medium text-gray-900 hover:text-brand-primary mr-3 whitespace-nowrap">Login</a>
+                            <a href="/register" class="text-sm font-medium text-white bg-brand-primary hover:bg-brand-secondary px-3 py-2 rounded-md whitespace-nowrap">Register</a>
                         {% endif %}
                     </div>
                     <!-- Mobile hamburger button -->
@@ -110,32 +128,26 @@
         <!-- Mobile menu -->
         <div id="mobile-menu" class="hidden lg:hidden border-t border-gray-200">
             <div class="pt-2 pb-3 space-y-1">
-                <a href="/tools" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Tools</a>
-                <a href="/tools/finder" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Tool Finder</a>
-                <a href="/tools/cdi" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">CDI Explorer</a>
-                <a href="/clusters" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Clusters</a>
-                <a href="/foundations" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Foundations</a>
-                <a href="/sources" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Sources</a>
-                <a href="/browse" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Browse</a>
-                <a href="/toolkit" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">History</a>
-                <a href="/strategy" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">Strategy</a>
+                {% for nav in nav_items|default([]) %}
+                <a href="{{ nav.route }}" class="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">{{ nav.label }}</a>
+                {% endfor %}
             </div>
             <div class="pt-3 pb-3 border-t border-gray-200 px-4">
                 {% if user %}
                     <div class="text-sm text-gray-700 mb-2">{{ user.display_name or user.email }}</div>
                     <div class="space-y-1">
-                        <a href="/profile" class="block py-1 text-sm font-medium text-gray-700 hover:text-blue-600">Profile</a>
-                        {% if user.is_admin %}
-                        <a href="/admin" class="block py-1 text-sm font-medium text-gray-700 hover:text-blue-600">Admin</a>
+                        <a href="/profile" class="block py-1 text-sm font-medium text-gray-700 hover:text-brand-primary">Profile</a>
+                        {% if user.is_admin and feature_admin|default(true) %}
+                        <a href="/admin" class="block py-1 text-sm font-medium text-gray-700 hover:text-brand-primary">Admin</a>
                         {% endif %}
                         <form action="/auth/logout" method="POST">
-                            <button type="submit" class="block py-1 text-sm font-medium text-blue-600 hover:text-blue-800">Logout</button>
+                            <button type="submit" class="block py-1 text-sm font-medium text-brand-primary hover:text-brand-secondary">Logout</button>
                         </form>
                     </div>
                 {% else %}
                     <div class="flex space-x-3">
-                        <a href="/login" class="text-sm font-medium text-gray-900 hover:text-blue-600">Login</a>
-                        <a href="/register" class="text-sm font-medium text-blue-600 hover:text-blue-800">Register</a>
+                        <a href="/login" class="text-sm font-medium text-gray-900 hover:text-brand-primary">Login</a>
+                        <a href="/register" class="text-sm font-medium text-brand-primary hover:text-brand-secondary">Register</a>
                     </div>
                 {% endif %}
             </div>
@@ -151,7 +163,10 @@
     <footer class="bg-white border-t border-gray-200 mt-12">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <p class="text-center text-sm text-gray-500">
-                The AI Editorial Toolkit &copy; 2025
+                {{ product_name|default('Application') }} &copy; 2025
+                {% if edition_label %}
+                <span class="text-gray-400 ml-1">({{ edition_name|default(edition_label) }})</span>
+                {% endif %}
             </p>
         </div>
     </footer>
@@ -163,7 +178,7 @@
         <div id="feedback-panel" class="hidden" style="width:320px;max-width:calc(100vw - 48px);">
             <div class="bg-white rounded-lg shadow-2xl border border-gray-200">
                 <!-- Header -->
-                <div class="bg-green-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center">
+                <div class="bg-brand-accent text-white px-4 py-3 rounded-t-lg flex justify-between items-center">
                     <span class="font-semibold text-sm">Send Feedback</span>
                     <button onclick="toggleFeedbackPanel()" class="text-white hover:text-green-200 text-lg leading-none">&times;</button>
                 </div>
@@ -172,7 +187,7 @@
                 <form id="feedback-form" class="p-4 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500">
+                        <select name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-brand-accent focus:border-brand-accent">
                             <option value="">Select a category...</option>
                             <option value="bug">Bug Report</option>
                             <option value="feature">Feature Request</option>
@@ -182,12 +197,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                        <textarea name="message" required rows="4" minlength="10" maxlength="2000" placeholder="Tell us what's on your mind..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500 resize-none"></textarea>
+                        <textarea name="message" required rows="4" minlength="10" maxlength="2000" placeholder="Tell us what's on your mind..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-brand-accent focus:border-brand-accent resize-none"></textarea>
                         <p class="text-xs text-gray-500 mt-1">Min 10 characters</p>
                     </div>
                     <input type="hidden" name="page_url" id="feedback-page-url">
                     <div id="feedback-message" class="hidden text-sm"></div>
-                    <button type="submit" id="feedback-submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                    <button type="submit" id="feedback-submit" class="w-full bg-brand-accent text-white px-4 py-2 rounded-md hover:opacity-90 text-sm font-medium">
                         Submit Feedback
                     </button>
                 </form>
@@ -198,7 +213,7 @@
         <button
             id="feedback-fab"
             onclick="toggleFeedbackPanel()"
-            class="bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2 flex items-center space-x-2 shadow-lg transition-transform"
+            class="bg-brand-accent hover:opacity-90 text-white rounded-full px-4 py-2 flex items-center space-x-2 shadow-lg transition-transform"
             title="Send Feedback"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,14 +225,15 @@
     </div>
     {% endif %}
 
-    <!-- Floating Chatbot Widget -->
+    <!-- Floating Chatbot Widget - only if RAG feature is enabled -->
+    {% if feature_rag|default(true) %}
     <div id="chat-widget" style="position:fixed;bottom:24px;right:24px;z-index:9999;">
         <!-- Chat Panel -->
         <div id="chat-panel" class="hidden" style="width:400px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 100px);">
             <div class="bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col" style="height:100%;">
                 <!-- Header -->
-                <div class="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center flex-shrink-0">
-                    <span class="font-semibold text-sm">Ask the Toolkit</span>
+                <div class="bg-brand-primary text-white px-4 py-3 rounded-t-lg flex justify-between items-center flex-shrink-0">
+                    <span class="font-semibold text-sm">Ask {{ brand_logo_text|default('Assistant') }}</span>
                     <button onclick="toggleChatPanel()" class="text-white hover:text-blue-200 text-lg leading-none">&times;</button>
                 </div>
 
@@ -226,7 +242,7 @@
                 <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3" style="min-height:0;">
                     <div class="flex justify-start">
                         <div class="bg-gray-100 text-gray-800 rounded-lg px-3 py-2 max-w-[85%] text-sm">
-                            Hi{{ ' ' + user.display_name if user.display_name else '' }}! Ask me anything about The AI Editorial Toolkit.
+                            Hi{{ ' ' + user.display_name if user.display_name else '' }}! Ask me anything about {{ product_name|default('the platform') }}.
                         </div>
                     </div>
                 </div>
@@ -240,12 +256,12 @@
                             name="query"
                             placeholder="Type your question..."
                             required
-                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-brand-primary focus:border-brand-primary"
                         >
                         <button
                             type="submit"
                             id="chat-widget-send"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+                            class="bg-brand-primary text-white px-4 py-2 rounded-md hover:bg-brand-secondary text-sm font-medium"
                         >
                             Send
                         </button>
@@ -255,8 +271,8 @@
                 <!-- Not logged in -->
                 <div class="flex-1 flex items-center justify-center p-6">
                     <div class="text-center">
-                        <p class="text-gray-600 text-sm mb-3">Login to ask questions about The AI Editorial Toolkit.</p>
-                        <a href="/login" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">Login</a>
+                        <p class="text-gray-600 text-sm mb-3">Login to ask questions about {{ product_name|default('the platform') }}.</p>
+                        <a href="/login" class="bg-brand-primary text-white px-4 py-2 rounded-md hover:bg-brand-secondary text-sm font-medium">Login</a>
                     </div>
                 </div>
                 {% endif %}
@@ -267,8 +283,8 @@
         <button
             id="chat-fab"
             onclick="toggleChatPanel()"
-            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-transform"
-            title="Ask the Toolkit"
+            class="bg-brand-primary hover:bg-brand-secondary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition-transform"
+            title="Ask {{ brand_logo_text|default('Assistant') }}"
         >
             <svg id="chat-fab-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -276,11 +292,16 @@
             </svg>
         </button>
     </div>
+    {% endif %}
 
     <script>
+    // Product name for use in JS
+    var productName = {{ (product_name|default('Application'))|tojson }};
+
     function toggleChatPanel() {
         var panel = document.getElementById('chat-panel');
         var fab = document.getElementById('chat-fab');
+        if (!panel || !fab) return;
         panel.classList.toggle('hidden');
         if (!panel.classList.contains('hidden')) {
             fab.style.display = 'none';
@@ -302,14 +323,14 @@
         // Add user message bubble
         var userBubble = document.createElement('div');
         userBubble.className = 'flex justify-end';
-        userBubble.innerHTML = '<div class="bg-blue-600 text-white rounded-lg px-3 py-2 max-w-[85%] text-sm">' + escapeHtml(query) + '</div>';
+        userBubble.innerHTML = '<div class="bg-brand-primary text-white rounded-lg px-3 py-2 max-w-[85%] text-sm">' + escapeHtml(query) + '</div>';
         messages.appendChild(userBubble);
 
         // Add loading indicator
         var loadingDiv = document.createElement('div');
         loadingDiv.className = 'flex justify-start';
         loadingDiv.id = 'chat-loading';
-        loadingDiv.innerHTML = '<div class="bg-gray-100 text-gray-500 rounded-lg px-3 py-2 text-sm animate-pulse">Searching editorial toolkit...</div>';
+        loadingDiv.innerHTML = '<div class="bg-gray-100 text-gray-500 rounded-lg px-3 py-2 text-sm animate-pulse">Searching ' + productName + '...</div>';
         messages.appendChild(loadingDiv);
 
         messages.scrollTop = messages.scrollHeight;

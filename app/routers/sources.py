@@ -2,17 +2,16 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, Query
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.models.auth import User
 from app.dependencies import get_current_user
 from app.services.kit_loader import (
     get_all_sources, get_source_batch, search_sources
 )
+from app.templates_engine import templates
 
 
 router = APIRouter(prefix="/sources", tags=["sources"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

@@ -3,13 +3,13 @@ import re
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.models.auth import User
 from app.dependencies import get_current_user
 from app.services.kit_loader import (
     get_all_clusters, get_cluster, get_cluster_tools
 )
+from app.templates_engine import templates
 
 
 def parse_where_to_start(text: str) -> List[Dict[str, Any]]:
@@ -116,7 +116,6 @@ def _parse_sections(text: str) -> List[Dict[str, Any]]:
 
 
 router = APIRouter(prefix="/clusters", tags=["clusters"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

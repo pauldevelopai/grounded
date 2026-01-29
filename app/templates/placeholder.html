@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product_name }} - Coming Soon{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <div class="max-w-2xl mx-auto text-center py-16">
+        <!-- Product Icon/Logo -->
+        <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-brand-primary bg-opacity-10">
+                <span class="text-4xl font-bold text-brand-primary">
+                    {{ brand_logo_text|default('?')|truncate(2, true, '') }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Heading -->
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            {{ product_name }} is Coming Soon
+        </h1>
+
+        <!-- Description -->
+        <p class="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+            {{ product_description|default("We're working hard to bring you something great. Check back soon!") }}
+        </p>
+
+        <!-- Status Badge -->
+        <div class="inline-flex items-center px-4 py-2 rounded-full bg-amber-100 text-amber-800 text-sm font-medium mb-8">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Under Development
+        </div>
+
+        <!-- What to expect -->
+        {% if placeholder_features %}
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-left mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">What to Expect</h2>
+            <ul class="space-y-3">
+                {% for feature in placeholder_features %}
+                <li class="flex items-start">
+                    <svg class="w-5 h-5 text-brand-primary mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span class="text-gray-700">{{ feature }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Call to action -->
+        <div class="space-y-4">
+            {% if user %}
+            <p class="text-sm text-gray-500">
+                We'll notify you when {{ product_name }} is ready.
+            </p>
+            {% else %}
+            <p class="text-sm text-gray-600 mb-4">
+                Sign up to be notified when {{ product_name }} launches.
+            </p>
+            <a href="/register" class="inline-flex items-center px-6 py-3 rounded-md bg-brand-primary text-white font-medium hover:bg-brand-secondary transition-colors">
+                Create an Account
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

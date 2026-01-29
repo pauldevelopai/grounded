@@ -2,7 +2,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -11,10 +10,10 @@ from app.dependencies import get_current_user
 from app.services.auth import create_user, authenticate_user, create_session, delete_session
 from app.settings import settings
 from app.middleware.csrf import CSRFProtectionMiddleware
+from app.templates_engine import templates
 
 
 router = APIRouter(tags=["auth"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/login", response_class=HTMLResponse)

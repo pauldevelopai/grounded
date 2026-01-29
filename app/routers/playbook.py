@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
@@ -22,11 +21,11 @@ from app.services.playbook.pipeline import (
     get_playbook_with_sources,
 )
 from app.settings import settings
+from app.templates_engine import templates
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/playbooks", tags=["playbooks"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 # ============================================================================

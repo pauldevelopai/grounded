@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Sources & Citations - The AI Editorial Toolkit{% endblock %}
+{% block title %}Sources & Citations - {{ product_name }}{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-0">
@@ -9,7 +9,7 @@
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900">Sources & Citations</h1>
         <p class="mt-2 text-gray-600 max-w-2xl">
-            {{ total_entries }} verified citations grounding The AI Editorial Toolkit's claims.
+            {{ total_entries }} verified citations grounding {{ product_name }}'s claims.
             Each entry links to a real, checkable source with a relevant extract.
         </p>
     </div>

@@ -1,67 +1,85 @@
 {% extends "base.html" %}
 
-{% block title %}The AI Editorial Toolkit{% endblock %}
+{% block title %}{{ product_name }}{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-0">
 
     <!-- Hero -->
     <div class="text-center py-12">
-        <h1 class="text-5xl font-bold text-blue-600 mb-4">The AI Editorial Toolkit</h1>
-        <p class="text-xl text-gray-600 mb-4">AI Learning Platform for Journalism</p>
+        <h1 class="text-5xl font-bold text-brand-primary mb-4">{{ product_name }}</h1>
+        <p class="text-xl text-gray-600 mb-4">{{ product_description|default('') }}</p>
+        {% if stats %}
         <p class="text-gray-500 max-w-2xl mx-auto mb-8">
             Explore {{ stats.tool_count }} AI tools across {{ stats.cluster_count }} clusters, each rated on Cost, Difficulty and Invasiveness.
             Backed by {{ stats.source_count }} verified citations. Learn how to use AI responsibly in journalism.
         </p>
+        {% endif %}
         <div class="flex justify-center gap-4 flex-wrap">
-            <a href="/tools/finder" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
+            {% if feature_rag|default(true) %}
+            <a href="/tools/finder" class="bg-brand-primary text-white px-6 py-3 rounded-lg hover:bg-brand-secondary transition font-medium">
                 Find the Right Tool
             </a>
-            <a href="/tools" class="bg-white text-blue-600 border-2 border-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition font-medium">
+            {% endif %}
+            <a href="/tools" class="bg-white text-brand-primary border-2 border-brand-primary px-6 py-3 rounded-lg hover:bg-gray-50 transition font-medium">
                 Browse All Tools
             </a>
+            {% if feature_foundations|default(true) %}
             <a href="/foundations" class="bg-white text-gray-700 border-2 border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition font-medium">
                 Read Foundations
             </a>
+            {% endif %}
         </div>
     </div>
 
     <!-- Personalized Suggestions (logged-in users) -->
+    {% if feature_recommendations|default(true) %}
     {% include "components/suggested_block.html" %}
+    {% endif %}
 
     <!-- Feature Cards -->
+    {% if stats %}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <a href="/tools" class="block bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 class="font-bold text-lg mb-2 text-gray-900">{{ stats.tool_count }} AI Tools</h3>
             <p class="text-sm text-gray-600">Each tool rated with CDI scores - Cost, Difficulty, Invasiveness - so you know the trade-offs before you start.</p>
         </a>
+        {% if feature_clusters|default(true) %}
         <a href="/clusters" class="block bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 class="font-bold text-lg mb-2 text-gray-900">{{ stats.cluster_count }} Clusters</h3>
             <p class="text-sm text-gray-600">From transcription to verification to AI agents. Tools grouped by function with teaching guidance and exercises.</p>
         </a>
+        {% endif %}
+        {% if feature_sources|default(true) %}
         <a href="/sources" class="block bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 class="font-bold text-lg mb-2 text-gray-900">{{ stats.source_count }} Sources</h3>
             <p class="text-sm text-gray-600">Every claim backed by verified citations from {{ stats.source_batch_count }} thematic batches of real-world evidence.</p>
         </a>
+        {% endif %}
+        {% if feature_rag|default(true) %}
         <button onclick="toggleChatPanel()" class="block bg-white p-6 rounded-lg shadow hover:shadow-md transition text-left w-full">
             <h3 class="font-bold text-lg mb-2 text-gray-900">Ask Questions</h3>
-            <p class="text-sm text-gray-600">Chat with The AI Editorial Toolkit using AI-powered search. Every answer is grounded in the source material with citations.</p>
+            <p class="text-sm text-gray-600">Chat with {{ product_name }} using AI-powered search. Every answer is grounded in the source material with citations.</p>
         </button>
+        {% endif %}
     </div>
+    {% endif %}
 
     <!-- Clusters Quick Overview -->
+    {% if clusters and feature_clusters|default(true) %}
     <div class="mb-12">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">Tool Clusters</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {% for cluster in clusters %}
             <a href="/clusters/{{ cluster.slug }}"
-               class="block bg-white rounded-lg shadow p-4 hover:shadow-md transition border-l-4 border-blue-500">
+               class="block bg-white rounded-lg shadow p-4 hover:shadow-md transition border-l-4 border-brand-primary">
                 <h3 class="font-semibold text-gray-900 text-sm">{{ cluster.name }}</h3>
                 <p class="text-xs text-gray-500 mt-1">{{ cluster.tool_count }} tools</p>
             </a>
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 
 </div>
 {% endblock %}

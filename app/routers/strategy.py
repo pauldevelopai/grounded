@@ -2,7 +2,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -11,10 +10,10 @@ from app.models.toolkit import StrategyPlan, UserActivity
 from app.dependencies import require_auth_page
 from app.services.strategy import generate_strategy_plan, export_plan_to_markdown
 from app.middleware.csrf import CSRFProtectionMiddleware
+from app.templates_engine import templates
 
 
 router = APIRouter(prefix="/strategy", tags=["strategy"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

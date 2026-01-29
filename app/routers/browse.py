@@ -2,7 +2,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from urllib.parse import quote, unquote
 
@@ -15,10 +14,10 @@ from app.services.browse import (
     get_available_clusters,
     get_section_detail
 )
+from app.templates_engine import templates
 
 
 router = APIRouter(prefix="/browse", tags=["browse"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

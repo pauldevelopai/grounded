@@ -5,7 +5,6 @@ import logging
 from typing import Optional
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.routers import health, admin, rag, auth_routes, toolkit, browse, strategy, tools, clusters, foundations, sources, profile, feedback, reviews, discovery, playbook, recommendations
 from app.dependencies import get_current_user
@@ -14,6 +13,7 @@ from app.models.auth import User
 from app.settings import settings
 from app.startup import run_startup_validation
 from app.products.definitions import register_all_products
+from app.templates_engine import templates
 from app.middleware import (
     RequestLoggingMiddleware,
     RateLimitMiddleware,
@@ -70,9 +70,6 @@ app.add_middleware(CSRFProtectionMiddleware)
 
 # 3. Rate Limiting
 app.add_middleware(RateLimitMiddleware)
-
-# Templates
-templates = Jinja2Templates(directory="app/templates")
 
 # Include routers
 app.include_router(health.router)

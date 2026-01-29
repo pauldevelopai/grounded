@@ -2,7 +2,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -13,10 +12,10 @@ from app.services.kit_loader import (
     get_all_tools, get_tool, get_all_clusters,
     get_cluster_tools, search_tools
 )
+from app.templates_engine import templates
 
 
 router = APIRouter(prefix="/tools", tags=["tools"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/finder", response_class=HTMLResponse)

@@ -2,7 +2,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import UUID
 
@@ -11,10 +10,10 @@ from app.models.auth import User
 from app.models.toolkit import ChatLog, Feedback, StrategyPlan, UserActivity
 from app.dependencies import require_auth_page
 from app.services.rag import rag_answer
+from app.templates_engine import templates
 
 
 router = APIRouter(prefix="/toolkit", tags=["toolkit"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

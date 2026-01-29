@@ -4,15 +4,14 @@ from markupsafe import Markup
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.models.auth import User
 from app.dependencies import get_current_user
 from app.services.kit_loader import get_all_foundations, get_foundation
+from app.templates_engine import templates
 
 
 router = APIRouter(prefix="/foundations", tags=["foundations"])
-templates = Jinja2Templates(directory="app/templates")
 
 _URL_RE = re.compile(r'(https?://\S+)')
 
