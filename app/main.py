@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 
-from app.routers import health, admin, rag, auth_routes, toolkit, browse, strategy, tools, clusters, foundations, sources, profile, feedback, reviews, discovery, playbook, recommendations, resources, usecases
+from app.routers import health, admin, rag, auth_routes, toolkit, strategy, tools, clusters, sources, profile, feedback, reviews, discovery, playbook, recommendations, resources, usecases
 from app.routers.recommendations import page_router as recommendations_pages
 from app.routers.discovery import approved_router as approved_tools_router
 from app.dependencies import get_current_user
@@ -109,11 +109,9 @@ app.include_router(admin.router)
 app.include_router(rag.router)
 app.include_router(auth_routes.router)
 app.include_router(toolkit.router)
-app.include_router(browse.router)
 app.include_router(tools.router)
 app.include_router(clusters.router)
 app.include_router(strategy.router)
-app.include_router(foundations.router)
 app.include_router(sources.router)
 app.include_router(profile.router)
 app.include_router(feedback.router)

@@ -15,6 +15,7 @@ from app.services.auth import hash_password
 from app.models.toolkit import ToolkitDocument, ToolkitChunk, ChatLog, Feedback, UserActivity, AppFeedback
 from app.models.review import ToolReview, ReviewVote, ReviewFlag
 from app.models.discovery import DiscoveredTool
+from app.models.suggested_source import SuggestedSource
 from app.services.ingestion import (
     ingest_document, reindex_document, ingest_from_kit,
     save_document_only, ingest_existing_document, uningest_document
@@ -142,6 +143,11 @@ async def admin_dashboard(
         DiscoveredTool.status == "pending_review"
     ).scalar() or 0
 
+    # Suggested sources stats
+    pending_sources_count = db.query(func.count(SuggestedSource.id)).filter(
+        SuggestedSource.status == "pending"
+    ).scalar() or 0
+
     stats = {
         "users": user_count,
         "admins": admin_count,
@@ -154,7 +160,8 @@ async def admin_dashboard(
         "reviews": review_count,
         "flagged_reviews": flagged_reviews_count,
         "discovered_tools": discovered_tools_count,
-        "pending_discovery": pending_discovery_count
+        "pending_discovery": pending_discovery_count,
+        "pending_sources": pending_sources_count
     }
 
     response = templates.TemplateResponse(
@@ -1378,3 +1385,268 @@ async def get_review_flags(
         }
         for flag in flags
     ]
+
+
+# =============================================================================
+# SUGGESTED SOURCES MANAGEMENT
+# =============================================================================
+
+@router.get("/sources", response_class=HTMLResponse)
+async def admin_suggested_sources(
+    request: Request,
+    status: Optional[str] = Query(None),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all suggested sources for admin review."""
+    query = db.query(SuggestedSource)
+
+    if status and status in ('pending', 'approved', 'rejected'):
+        query = query.filter(SuggestedSource.status == status)
+
+    suggestions = query.order_by(desc(SuggestedSource.created_at)).all()
+
+    # Get counts by status
+    pending_count = db.query(SuggestedSource).filter(SuggestedSource.status == 'pending').count()
+    approved_count = db.query(SuggestedSource).filter(SuggestedSource.status == 'approved').count()
+    rejected_count = db.query(SuggestedSource).filter(SuggestedSource.status == 'rejected').count()
+
+    return templates.TemplateResponse(
+        "admin/suggested_sources.html",
+        {
+            "request": request,
+            "user": admin_user,
+            "suggestions": suggestions,
+            "status_filter": status or "",
+            "pending_count": pending_count,
+            "approved_count": approved_count,
+            "rejected_count": rejected_count,
+            "active_admin_page": "sources",
+        }
+    )
+
+
+@router.post("/sources/{suggestion_id}/approve")
+async def approve_suggested_source(
+    suggestion_id: str,
+    review_notes: Optional[str] = Form(None),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Approve a suggested source."""
+    suggestion = db.query(SuggestedSource).filter(SuggestedSource.id == suggestion_id).first()
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+
+    suggestion.status = "approved"
+    suggestion.reviewed_by = admin_user.id
+    suggestion.reviewed_at = datetime.now(timezone.utc)
+    suggestion.review_notes = review_notes or "Approved and added to sources library."
+
+    db.commit()
+
+    return RedirectResponse(url="/admin/sources?status=pending", status_code=303)
+
+
+@router.post("/sources/{suggestion_id}/reject")
+async def reject_suggested_source(
+    suggestion_id: str,
+    review_notes: Optional[str] = Form(None),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Reject a suggested source."""
+    suggestion = db.query(SuggestedSource).filter(SuggestedSource.id == suggestion_id).first()
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+
+    suggestion.status = "rejected"
+    suggestion.reviewed_by = admin_user.id
+    suggestion.reviewed_at = datetime.now(timezone.utc)
+    suggestion.review_notes = review_notes or "Does not meet our criteria for inclusion."
+
+    db.commit()
+
+    return RedirectResponse(url="/admin/sources?status=pending", status_code=303)
+
+
+# =============================================================================
+# TRAINING DATA MANAGEMENT
+# =============================================================================
+
+@router.get("/training", response_class=HTMLResponse)
+async def admin_training(
+    request: Request,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Training data management page."""
+    from app.services.kit_loader import get_all_tools, get_all_clusters, get_all_sources
+
+    # Get chunk stats by type (metadata uses 'type' key)
+    chunk_type_stats = db.query(
+        ToolkitChunk.chunk_metadata['type'].astext.label('type'),
+        func.count(ToolkitChunk.id).label('count')
+    ).group_by('type').all()
+
+    chunk_types = [{"type": ct.type or "unknown", "count": ct.count} for ct in chunk_type_stats]
+
+    # Calculate totals
+    total_chunks = sum(ct["count"] for ct in chunk_types)
+    tool_chunks = sum(ct["count"] for ct in chunk_types if ct["type"] == "tool")
+    source_chunks = sum(ct["count"] for ct in chunk_types if ct["type"] in ("source", "source_pdf"))
+    other_chunks = total_chunks - tool_chunks - source_chunks
+
+    # Get kit stats
+    kit_tools = len(get_all_tools())
+    kit_clusters = len(get_all_clusters()) + 1  # +1 for admin-approved cluster
+
+    # Get source stats
+    sources_data = get_all_sources()
+    static_sources = sources_data.get("total_entries", 0)
+    community_sources = db.query(SuggestedSource).filter(SuggestedSource.status == "approved").count()
+
+    # Calculate indexed source chunks
+    indexed_source_chunks = sum(ct["count"] for ct in chunk_types if ct["type"] in ("source", "source_pdf"))
+
+    # Get user activity stats
+    user_activities = db.query(UserActivity).count()
+    active_users = db.query(func.count(func.distinct(UserActivity.user_id))).scalar() or 0
+
+    # ============================================
+    # USER ACTIVITY DATA FOR RECOMMENDATIONS
+    # ============================================
+
+    # Activity breakdown by type
+    activity_breakdown = (
+        db.query(UserActivity.activity_type, func.count(UserActivity.id).label("count"))
+        .group_by(UserActivity.activity_type)
+        .order_by(desc("count"))
+        .all()
+    )
+
+    # Get users with most activity (top 10)
+    users_with_activity = (
+        db.query(
+            User.id,
+            User.email,
+            User.display_name,
+            User.ai_experience_level,
+            User.budget,
+            User.data_sensitivity,
+            func.count(UserActivity.id).label("activity_count")
+        )
+        .join(UserActivity, User.id == UserActivity.user_id)
+        .group_by(User.id)
+        .order_by(desc("activity_count"))
+        .limit(10)
+        .all()
+    )
+
+    # For each top user, get their activity signals that feed recommendations
+    user_activity_details = []
+    for u in users_with_activity:
+        # Get recent activities for this user
+        user_activities_list = db.query(UserActivity).filter(
+            UserActivity.user_id == u.id
+        ).order_by(desc(UserActivity.created_at)).limit(50).all()
+
+        # Extract activity signals (same logic as recommendation service)
+        searched_queries = []
+        browsed_clusters = []
+        viewed_tools = []
+
+        for activity in user_activities_list:
+            if activity.activity_type == "tool_search" and activity.query:
+                if activity.query not in searched_queries:
+                    searched_queries.append(activity.query)
+            elif activity.activity_type == "tool_finder" and activity.details:
+                need = activity.details.get("need")
+                if need and need not in browsed_clusters:
+                    browsed_clusters.append(need)
+            elif activity.activity_type == "tool_view" and activity.details:
+                tool_slug = activity.details.get("tool_slug")
+                if tool_slug and tool_slug not in viewed_tools:
+                    viewed_tools.append(tool_slug)
+            elif activity.activity_type == "browse" and activity.details:
+                cluster = activity.details.get("cluster")
+                if cluster and cluster not in browsed_clusters:
+                    browsed_clusters.append(cluster)
+
+        # Count recommendation_shown activities
+        rec_shown_count = sum(1 for a in user_activities_list if a.activity_type == "recommendation_shown")
+
+        user_activity_details.append({
+            "user_id": str(u.id),
+            "email": u.email,
+            "display_name": u.display_name,
+            "ai_experience_level": u.ai_experience_level,
+            "budget": u.budget,
+            "data_sensitivity": u.data_sensitivity,
+            "activity_count": u.activity_count,
+            "searched_queries": searched_queries[:5],
+            "browsed_clusters": browsed_clusters[:5],
+            "viewed_tools": viewed_tools[:5],
+            "recommendations_served": rec_shown_count,
+        })
+
+    # Recent activity log (last 20)
+    recent_activities = (
+        db.query(UserActivity, User)
+        .join(User, UserActivity.user_id == User.id)
+        .order_by(desc(UserActivity.created_at))
+        .limit(20)
+        .all()
+    )
+
+    stats = {
+        "total_chunks": total_chunks,
+        "tool_chunks": tool_chunks,
+        "source_chunks": source_chunks,
+        "other_chunks": other_chunks,
+        "kit_tools": kit_tools,
+        "kit_clusters": kit_clusters,
+        "static_sources": static_sources,
+        "community_sources": community_sources,
+        "indexed_source_chunks": indexed_source_chunks,
+        "user_activities": user_activities,
+        "active_users": active_users,
+    }
+
+    return templates.TemplateResponse(
+        "admin/training.html",
+        {
+            "request": request,
+            "user": user,
+            "stats": stats,
+            "chunk_types": chunk_types,
+            "activity_breakdown": activity_breakdown,
+            "user_activity_details": user_activity_details,
+            "recent_activities": recent_activities,
+            "active_admin_page": "training",
+        }
+    )
+
+
+@router.post("/training/ingest-sources")
+async def ingest_sources(
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Ingest all sources into the RAG system."""
+    # This would trigger source ingestion
+    # For now, redirect with a message
+    return RedirectResponse(url="/admin/training", status_code=303)
+
+
+@router.post("/training/clear-embeddings")
+async def clear_embeddings(
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Clear all embeddings from the system."""
+    # Delete all chunks
+    db.query(ToolkitChunk).delete()
+    db.commit()
+
+    return RedirectResponse(url="/admin/training", status_code=303)

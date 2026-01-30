@@ -137,55 +137,61 @@ def _generate_grounded_plan(
 
     context = "\n\n".join(context_parts)
 
-    # Build prompt
-    system_prompt = """You are an AI strategy consultant creating implementation plans based on The AI Editorial Toolkit.
+    # Build prompt - focused on practical, actionable advice
+    system_prompt = """You are a practical AI implementation advisor for journalists and newsrooms.
 
-CRITICAL RULES:
-1. ONLY recommend tools and practices mentioned in the provided editorial toolkit content
-2. Every recommendation MUST cite the source section using [1], [2], etc.
-3. Do NOT invent or suggest tools not in The AI Editorial Toolkit
-4. If the toolkit doesn't cover something, acknowledge the gap
-5. Be specific and actionable
-6. Structure the plan clearly with sections"""
+Your job is to create SHORT, ACTIONABLE implementation plans. Not corporate strategy documents.
+
+RULES:
+1. Be specific. Name actual tools from the provided content. No vague advice.
+2. Give concrete first steps someone can do TODAY.
+3. Cite sources using [1], [2] format.
+4. Skip generic advice like "consider your needs" or "evaluate options."
+5. If the toolkit content doesn't have a good match, say so briefly.
+6. Keep sections short. Bullet points over paragraphs.
+7. Focus on the 2-3 most relevant tools, not a comprehensive list."""
 
     # Build activity section if available
     activity_section = ""
     activity_summary = inputs.get('activity_summary')
     if activity_summary:
-        activity_section = f"""
-**User Activity History:**
-- Total activities: {activity_summary.get('total_activities', 0)}
-- Recent tool searches: {', '.join(activity_summary.get('tool_searches', [])[:5]) or 'None'}
-- Tool finder interests: {', '.join(activity_summary.get('tool_finder_needs', [])[:3]) or 'None'}
-- Browsed sections: {', '.join(activity_summary.get('browsed_sections', [])[:5]) or 'None'}
+        searches = activity_summary.get('tool_searches', [])[:3]
+        if searches:
+            activity_section = f"\nRecent searches: {', '.join(searches)}"
 
-Consider the user's browsing history and interests when making recommendations.
-"""
+    role = inputs.get('role', 'journalist')
+    org_type = inputs.get('org_type', 'newsroom')
+    use_cases = inputs.get('use_cases', [])
+    use_case_text = ', '.join(use_cases) if use_cases else 'general AI adoption'
 
-    user_prompt = f"""Create a strategic implementation plan based on these requirements:
-
-**User Context:**
-- Role: {inputs.get('role', 'Not specified')}
-- Organization Type: {inputs.get('org_type', 'Not specified')}
-- Risk Level: {inputs.get('risk_level', 'Not specified')}
-- Data Sensitivity: {inputs.get('data_sensitivity', 'Not specified')}
-- Budget: {inputs.get('budget', 'Not specified')}
-- Deployment Preference: {inputs.get('deployment_pref', 'Not specified')}
-- Use Cases: {', '.join(inputs.get('use_cases', [])) if inputs.get('use_cases') else 'Not specified'}
+    user_prompt = f"""Based on this toolkit content, give practical recommendations for a {role} at a {org_type} who wants to: {use_case_text}
 {activity_section}
-**AI Editorial Toolkit Content:**
 
+TOOLKIT CONTENT:
 {context}
 
-**Instructions:**
-Create a comprehensive strategy plan that includes:
-1. Executive Summary
-2. Recommended Tools (ONLY from toolkit above, cite with [1], [2], etc.)
-3. Implementation Phases
-4. Risk Mitigation
-5. Success Metrics
+Create a brief implementation plan with:
 
-Cite every recommendation using the [N] format from The AI Editorial Toolkit content above."""
+## Quick Start (What to do first)
+One concrete action to take this week.
+
+## Recommended Tools
+List 2-3 specific tools from the content above. For each:
+- Tool name and what it does
+- Why it fits this use case
+- CDI score if mentioned (Cost/Difficulty/Invasiveness)
+- One practical tip for getting started
+
+## Watch Out For
+2-3 specific risks or gotchas based on their context:
+- Risk level: {inputs.get('risk_level', 'moderate')}
+- Data sensitivity: {inputs.get('data_sensitivity', 'standard')}
+- Budget: {inputs.get('budget', 'limited')}
+
+## Next Steps
+3 concrete actions, numbered, that they can actually do.
+
+Cite sources as [1], [2] etc. Keep it under 500 words total."""
 
     # Call OpenAI API
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -213,8 +219,8 @@ Cite every recommendation using the [N] format from The AI Editorial Toolkit con
             "heading": chunk.heading,
             "excerpt": chunk.chunk_text[:200] + "..." if len(chunk.chunk_text) > 200 else chunk.chunk_text,
             "similarity_score": chunk.similarity_score,
-            "cluster": chunk.cluster,
-            "tool_name": chunk.tool_name
+            "cluster": chunk.metadata.get("cluster"),
+            "tool_name": chunk.metadata.get("tool_name")
         })
 
     return plan_text, citations

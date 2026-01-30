@@ -81,8 +81,8 @@
     <!-- Generated Plan -->
     <div class="bg-white rounded-lg shadow p-8 mb-6">
         <h3 class="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Strategy Plan</h3>
-        <div class="prose prose-sm max-w-none">
-            <div class="whitespace-pre-wrap text-gray-700 leading-relaxed">{{ plan.plan_text }}</div>
+        <div class="prose prose-sm max-w-none text-gray-700">
+            {{ plan.plan_text | markdown }}
         </div>
     </div>
 

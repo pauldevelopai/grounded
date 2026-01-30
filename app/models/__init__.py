@@ -7,6 +7,7 @@ from app.models.discovery import DiscoveredTool, DiscoveryRun, ToolMatch
 from app.models.playbook import ToolPlaybook, PlaybookSource
 from app.models.resource import DiscoveredResource
 from app.models.usecase import UseCase
+from app.models.suggested_source import SuggestedSource
 
 __all__ = [
     "User",
@@ -23,4 +24,5 @@ __all__ = [
     "PlaybookSource",
     "DiscoveredResource",
     "UseCase",
+    "SuggestedSource",
 ]

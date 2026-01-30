@@ -48,8 +48,8 @@ AI_TOOLKIT_PRODUCT = Product(
             requires_auth=False,
         ),
         NavigationItem(
-            label="Tool Finder",
-            route="/toolkit",
+            label="Matcher",
+            route="/tools/finder",
             icon="search",
             requires_auth=False,
         ),
@@ -66,28 +66,16 @@ AI_TOOLKIT_PRODUCT = Product(
             requires_auth=False,
         ),
         NavigationItem(
-            label="Foundations",
-            route="/foundations",
-            icon="book",
-            requires_auth=False,
-        ),
-        NavigationItem(
             label="Sources",
             route="/sources",
             icon="link",
             requires_auth=False,
         ),
         NavigationItem(
-            label="Browse",
-            route="/browse",
-            icon="folder",
-            requires_auth=False,
-        ),
-        NavigationItem(
-            label="History",
+            label="Activity",
             route="/toolkit",
             icon="clock",
-            requires_auth=True,  # History requires login
+            requires_auth=True,  # Activity requires login
         ),
         NavigationItem(
             label="Strategy",

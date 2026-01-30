@@ -10,6 +10,8 @@ from typing import Any, Optional
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from starlette.responses import Response
+from markupsafe import Markup
+import markdown
 
 from app.products.config import Product, Edition, FeatureFlags, NavigationItem
 from app.products.context import (
@@ -17,6 +19,17 @@ from app.products.context import (
     get_current_edition,
     get_feature_flags,
 )
+
+
+def markdown_filter(text: str) -> Markup:
+    """Convert markdown text to HTML."""
+    if not text:
+        return Markup("")
+    html = markdown.markdown(
+        text,
+        extensions=['fenced_code', 'tables', 'nl2br']
+    )
+    return Markup(html)
 
 
 class ProductAwareTemplates(Jinja2Templates):
@@ -227,6 +240,9 @@ class ProductAwareTemplates(Jinja2Templates):
 
 # Singleton instance for use across the application
 templates = ProductAwareTemplates(directory="app/templates")
+
+# Register custom filters
+templates.env.filters["markdown"] = markdown_filter
 
 
 def get_templates() -> ProductAwareTemplates:

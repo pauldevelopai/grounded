@@ -2,7 +2,15 @@
 
 Recommends tools based on user profile and activity, provides tailored
 implementation guidance, and grounds all recommendations with citations.
+
+Recommendations rotate based on:
+- Tools recently shown (penalized to promote variety)
+- User activity signals (searches, views, browsing)
+- Time-based diversity (different recommendations on repeat visits)
 """
+import hashlib
+import random
+from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -17,6 +25,12 @@ from app.schemas.recommendation import (
     UserContext, ToolRecommendation, TailoredGuidance,
     Citation, CitationType, ScoreBreakdown, TrainingPlan, RolloutApproach
 )
+
+# Maximum recommendations to show at once
+MAX_RECOMMENDATIONS = 8
+
+# How long before a shown recommendation can reappear (hours)
+ROTATION_COOLDOWN_HOURS = 24
 
 
 # Constraint mappings from user profile to CDI limits
@@ -39,6 +53,73 @@ DATA_SENSITIVITY_TO_MAX_INVASIVENESS = {
     "internal": 6,
     "public": 10,
 }
+
+
+def get_recently_shown_recommendations(db: Session, user_id: UUID, hours: int = ROTATION_COOLDOWN_HOURS) -> list[str]:
+    """Get tool slugs that were recently shown in recommendations.
+
+    Args:
+        db: Database session
+        user_id: User ID
+        hours: How far back to look
+
+    Returns:
+        List of tool slugs that were recently recommended
+    """
+    cutoff = datetime.utcnow() - timedelta(hours=hours)
+
+    recent = db.query(UserActivity).filter(
+        UserActivity.user_id == user_id,
+        UserActivity.activity_type == "recommendation_shown",
+        UserActivity.created_at >= cutoff
+    ).all()
+
+    shown_slugs = []
+    for activity in recent:
+        if activity.details and "tool_slugs" in activity.details:
+            shown_slugs.extend(activity.details["tool_slugs"])
+
+    return list(set(shown_slugs))
+
+
+def record_recommendations_shown(db: Session, user_id: UUID, tool_slugs: list[str]) -> None:
+    """Record which recommendations were shown to the user.
+
+    Args:
+        db: Database session
+        user_id: User ID
+        tool_slugs: List of tool slugs that were shown
+    """
+    activity = UserActivity(
+        user_id=user_id,
+        activity_type="recommendation_shown",
+        details={"tool_slugs": tool_slugs}
+    )
+    db.add(activity)
+    db.commit()
+
+
+def get_diversity_seed(user_id: UUID) -> int:
+    """Generate a time-based seed for diversity that changes periodically.
+
+    Uses hour of day + user_id to create variation that:
+    - Changes every hour for the same user
+    - Is different for different users at the same time
+
+    Args:
+        user_id: User UUID
+
+    Returns:
+        Integer seed for random operations
+    """
+    now = datetime.utcnow()
+    # Change seed every 4 hours
+    time_bucket = now.hour // 4
+    day_of_year = now.timetuple().tm_yday
+
+    # Combine time bucket with user_id for unique-per-user diversity
+    seed_string = f"{user_id}-{day_of_year}-{time_bucket}"
+    return int(hashlib.md5(seed_string.encode()).hexdigest()[:8], 16)
 
 
 def build_user_context(db: Session, user: User) -> UserContext:
@@ -598,21 +679,38 @@ def get_recommendations(
     user: User,
     query: Optional[str] = None,
     use_case: Optional[str] = None,
-    limit: int = 5,
+    limit: int = MAX_RECOMMENDATIONS,
+    record_shown: bool = False,
 ) -> list[ToolRecommendation]:
-    """Get personalized tool recommendations for a user.
+    """Get personalized tool recommendations for a user with rotation.
+
+    Recommendations rotate based on:
+    - Tools recently shown are penalized to promote variety
+    - User activity (searches, views, browsing) influences scores
+    - Time-based diversity seed changes recommendations periodically
 
     Args:
         db: Database session
         user: The user to get recommendations for
         query: Optional search query to filter tools
         use_case: Optional use case/cluster slug to filter by
-        limit: Maximum number of recommendations
+        limit: Maximum number of recommendations (capped at MAX_RECOMMENDATIONS)
+        record_shown: Whether to record these recommendations as shown
 
     Returns:
         List of scored and explained recommendations
     """
+    # Cap limit at MAX_RECOMMENDATIONS
+    limit = min(limit, MAX_RECOMMENDATIONS)
+
     context = build_user_context(db, user)
+
+    # Get recently shown tools for rotation
+    recently_shown = get_recently_shown_recommendations(db, user.id)
+
+    # Get diversity seed for this user/time period
+    diversity_seed = get_diversity_seed(user.id)
+    rng = random.Random(diversity_seed)
 
     # Get candidate tools
     if query:
@@ -644,15 +742,29 @@ def get_recommendations(
         ).first()
 
         score, breakdown = score_tool_for_user(tool, context, reviews)
+
+        # Apply rotation penalty for recently shown tools
+        tool_slug = tool.get("slug", "")
+        if tool_slug in recently_shown:
+            # Penalize recently shown tools to promote rotation
+            # Reduce score by 15-25 points (randomized for variety)
+            penalty = 15 + rng.random() * 10
+            score = max(0, score - penalty)
+
+        # Add small diversity factor (±3 points) to create variety
+        # This prevents the same exact ordering every time
+        diversity_adjustment = (rng.random() - 0.5) * 6
+        score = max(0, score + diversity_adjustment)
+
         explanation, citations = build_explanation(tool, context, breakdown, reviews, playbook)
         guidance = generate_tailored_guidance(tool, context, playbook)
 
         scored.append(ToolRecommendation(
-            tool_slug=tool.get("slug", ""),
+            tool_slug=tool_slug,
             tool_name=tool.get("name", ""),
             cluster_slug=tool.get("cluster_slug", ""),
             cluster_name=tool.get("cluster_name", ""),
-            fit_score=score,
+            fit_score=round(score, 1),
             score_breakdown=breakdown,
             explanation=explanation,
             citations=citations,
@@ -662,10 +774,18 @@ def get_recommendations(
             tailored_guidance=guidance,
         ))
 
-    # Sort by score descending
+    # Sort by adjusted score descending
     scored.sort(key=lambda r: r.fit_score, reverse=True)
 
-    return scored[:limit]
+    # Get final recommendations
+    recommendations = scored[:limit]
+
+    # Record which recommendations were shown (for future rotation)
+    if record_shown and recommendations:
+        shown_slugs = [r.tool_slug for r in recommendations]
+        record_recommendations_shown(db, user.id, shown_slugs)
+
+    return recommendations
 
 
 def get_tool_guidance(

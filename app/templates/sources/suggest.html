@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Suggest a Source - {{ product_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Suggest a Source</h1>
+        <p class="mt-2 text-gray-600 max-w-2xl">
+            Found a valuable article, report, or study about AI in journalism?
+            Submit it here for review. Approved sources will be added to our citations library.
+        </p>
+    </div>
+
+    {% if not user %}
+    <!-- Login Required -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+        <div class="flex items-start">
+            <svg class="h-6 w-6 text-yellow-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+                <h3 class="text-lg font-medium text-yellow-800">Login Required</h3>
+                <p class="mt-1 text-yellow-700">
+                    You need to be logged in to suggest sources.
+                </p>
+                <a href="/login?next=/sources/suggest" class="mt-3 inline-block bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700">
+                    Login to Continue
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Success/Error Messages -->
+    {% if success %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-green-800">{{ success }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span class="text-red-800">{{ error }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Suggestion Form -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Submit a New Source</h2>
+
+        <form method="POST" action="/sources/suggest" class="space-y-4">
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                    Title <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="title" name="title" required
+                       placeholder="e.g., How AI is Transforming Local News"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- URL -->
+            <div>
+                <label for="url" class="block text-sm font-medium text-gray-700 mb-1">
+                    URL <span class="text-red-500">*</span>
+                </label>
+                <input type="url" id="url" name="url" required
+                       placeholder="https://example.com/article"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Source Type -->
+            <div>
+                <label for="source_type" class="block text-sm font-medium text-gray-700 mb-1">
+                    Source Type <span class="text-red-500">*</span>
+                </label>
+                <select id="source_type" name="source_type" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <option value="article">Article</option>
+                    <option value="report">Report</option>
+                    <option value="study">Academic Study</option>
+                    <option value="guide">Guide / Tutorial</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <!-- Excerpt -->
+            <div>
+                <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-1">
+                    Brief Summary
+                </label>
+                <textarea id="excerpt" name="excerpt" rows="3"
+                          placeholder="A brief description of what this source covers..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Optional: Summarize the key points in 2-3 sentences.</p>
+            </div>
+
+            <!-- Why Valuable -->
+            <div>
+                <label for="why_valuable" class="block text-sm font-medium text-gray-700 mb-1">
+                    Why is this source valuable?
+                </label>
+                <textarea id="why_valuable" name="why_valuable" rows="2"
+                          placeholder="e.g., Contains practical case studies from newsrooms in Africa..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Optional: Help us understand why this should be included.</p>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center justify-between pt-4">
+                <a href="/sources" class="text-gray-600 hover:text-gray-800">
+                    &larr; Back to Sources
+                </a>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium">
+                    Submit Suggestion
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- My Suggestions -->
+    {% if my_suggestions %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Your Previous Suggestions</h2>
+
+        <div class="space-y-4">
+            {% for suggestion in my_suggestions %}
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="font-medium text-gray-900">{{ suggestion.title }}</h3>
+                        <a href="{{ suggestion.url }}" target="_blank" class="text-sm text-blue-600 hover:underline truncate block max-w-md">
+                            {{ suggestion.url[:60] }}{% if suggestion.url|length > 60 %}...{% endif %}
+                        </a>
+                        {% if suggestion.excerpt %}
+                        <p class="mt-2 text-sm text-gray-600">{{ suggestion.excerpt[:150] }}{% if suggestion.excerpt|length > 150 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    <div class="ml-4 flex-shrink-0">
+                        {% if suggestion.status == 'pending' %}
+                        <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pending Review</span>
+                        {% elif suggestion.status == 'approved' %}
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Approved</span>
+                        {% elif suggestion.status == 'rejected' %}
+                        <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Not Added</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500">
+                    Submitted {{ suggestion.created_at.strftime('%b %d, %Y') }}
+                    {% if suggestion.review_notes and suggestion.status != 'pending' %}
+                    <span class="ml-2">• {{ suggestion.review_notes }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+</div>
+{% endblock %}

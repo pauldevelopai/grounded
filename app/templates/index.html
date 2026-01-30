@@ -29,11 +29,6 @@
             <a href="/tools" class="bg-white text-brand-primary border-2 border-brand-primary px-6 py-3 rounded-lg hover:bg-gray-50 transition font-medium">
                 Browse All Tools
             </a>
-            {% if feature_foundations|default(true) %}
-            <a href="/foundations" class="bg-white text-gray-700 border-2 border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition font-medium">
-                Read Foundations
-            </a>
-            {% endif %}
         </div>
     </div>
 
@@ -95,13 +90,6 @@
                 Artificial Intelligence is already embedded in journalism, whether it is formally acknowledged or not. Students and early-career journalists are using AI systems to transcribe interviews, summarise documents, translate material, write code, generate visuals, and search for information. The question facing journalism education is therefore not whether AI should be introduced, but how it should be understood, governed and used responsibly.
             </p>
         </div>
-        {% if feature_foundations|default(true) %}
-        <div class="mt-6">
-            <a href="/foundations" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                Read the full foundations &rarr;
-            </a>
-        </div>
-        {% endif %}
     </div>
 
 </div>

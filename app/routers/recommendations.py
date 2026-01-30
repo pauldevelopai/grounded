@@ -12,6 +12,7 @@ from app.services.recommendation import (
     get_tool_guidance,
     get_suggested_for_location,
     build_user_context,
+    MAX_RECOMMENDATIONS,
 )
 from app.services.kit_loader import get_tool, get_all_clusters
 from app.schemas.recommendation import (
@@ -57,12 +58,13 @@ async def for_you_page(
             }
         )
 
-    # Get recommendations for logged-in user (limited to top 5)
+    # Get recommendations for logged-in user (max 8, with rotation tracking)
     recommendations = get_recommendations(
         db=db,
         user=user,
         use_case=use_case,
-        limit=5,
+        limit=MAX_RECOMMENDATIONS,
+        record_shown=True,  # Track for rotation
     )
     logger.info(f"Got {len(recommendations)} recommendations for use_case={use_case}")
 
@@ -121,14 +123,15 @@ router = APIRouter(
 async def get_recommendations_for_me(
     query: Optional[str] = Query(None, description="Search query to filter tools"),
     use_case: Optional[str] = Query(None, description="Use case to filter by"),
-    limit: int = Query(5, ge=1, le=20, description="Maximum recommendations"),
+    limit: int = Query(MAX_RECOMMENDATIONS, ge=1, le=MAX_RECOMMENDATIONS, description="Maximum recommendations"),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
     """Get personalized tool recommendations based on user profile and activity.
 
     Returns tools scored and ranked for this specific user, with explanations
-    and citations for why each tool is recommended.
+    and citations for why each tool is recommended. Recommendations rotate
+    based on user activity and previously shown tools.
     """
     recommendations = get_recommendations(
         db=db,
@@ -136,6 +139,7 @@ async def get_recommendations_for_me(
         query=query,
         use_case=use_case,
         limit=limit,
+        record_shown=True,
     )
 
     # Build summary of user context for transparency

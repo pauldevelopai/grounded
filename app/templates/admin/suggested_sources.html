@@ -1,0 +1,147 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Suggested Sources{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Suggested Sources</h1>
+        <p class="text-gray-600 mt-1">Review and approve user-submitted source suggestions.</p>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <a href="/admin/sources"
+                   class="px-6 py-4 text-sm font-medium {% if not status_filter %}border-b-2 border-blue-500 text-blue-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    All ({{ pending_count + approved_count + rejected_count }})
+                </a>
+                <a href="/admin/sources?status=pending"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'pending' %}border-b-2 border-yellow-500 text-yellow-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Pending Review
+                    {% if pending_count > 0 %}
+                    <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs">{{ pending_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/admin/sources?status=approved"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'approved' %}border-b-2 border-green-500 text-green-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Approved ({{ approved_count }})
+                </a>
+                <a href="/admin/sources?status=rejected"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'rejected' %}border-b-2 border-red-500 text-red-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Rejected ({{ rejected_count }})
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Suggestions List -->
+    {% if suggestions %}
+    <div class="space-y-4">
+        {% for suggestion in suggestions %}
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <!-- Title and URL -->
+                    <h3 class="text-lg font-semibold text-gray-900">{{ suggestion.title }}</h3>
+                    <a href="{{ suggestion.url }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all">
+                        {{ suggestion.url }}
+                    </a>
+
+                    <!-- Type Badge -->
+                    <div class="mt-2">
+                        <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">{{ suggestion.source_type }}</span>
+                    </div>
+
+                    <!-- Excerpt -->
+                    {% if suggestion.excerpt %}
+                    <div class="mt-3">
+                        <p class="text-sm text-gray-700">{{ suggestion.excerpt }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Why Valuable -->
+                    {% if suggestion.why_valuable %}
+                    <div class="mt-3 p-3 bg-blue-50 rounded">
+                        <p class="text-sm text-blue-800"><strong>Why valuable:</strong> {{ suggestion.why_valuable }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submitter Info -->
+                    <div class="mt-4 text-xs text-gray-500">
+                        Submitted by {{ suggestion.submitter.email if suggestion.submitter else 'Unknown' }}
+                        on {{ suggestion.created_at.strftime('%b %d, %Y at %H:%M') }}
+                    </div>
+
+                    <!-- Review Notes (if already reviewed) -->
+                    {% if suggestion.status != 'pending' and suggestion.review_notes %}
+                    <div class="mt-3 p-3 {% if suggestion.status == 'approved' %}bg-green-50{% else %}bg-red-50{% endif %} rounded">
+                        <p class="text-sm {% if suggestion.status == 'approved' %}text-green-800{% else %}text-red-800{% endif %}">
+                            <strong>Review notes:</strong> {{ suggestion.review_notes }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Status and Actions -->
+                <div class="ml-6 flex-shrink-0 text-right">
+                    {% if suggestion.status == 'pending' %}
+                    <span class="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-full">Pending</span>
+
+                    <!-- Action Forms -->
+                    <div class="mt-4 space-y-2">
+                        <form method="POST" action="/admin/sources/{{ suggestion.id }}/approve" class="inline">
+                            <input type="hidden" name="review_notes" value="Approved - added to sources library.">
+                            <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+                                Approve
+                            </button>
+                        </form>
+                        <form method="POST" action="/admin/sources/{{ suggestion.id }}/reject" class="inline">
+                            <input type="hidden" name="review_notes" value="Does not meet our inclusion criteria.">
+                            <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% elif suggestion.status == 'approved' %}
+                    <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">Approved</span>
+                    <p class="mt-2 text-xs text-gray-500">
+                        by {{ suggestion.reviewer.email if suggestion.reviewer else 'Admin' }}<br>
+                        {{ suggestion.reviewed_at.strftime('%b %d, %Y') if suggestion.reviewed_at else '' }}
+                    </p>
+                    {% else %}
+                    <span class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full">Rejected</span>
+                    <p class="mt-2 text-xs text-gray-500">
+                        by {{ suggestion.reviewer.email if suggestion.reviewer else 'Admin' }}<br>
+                        {{ suggestion.reviewed_at.strftime('%b %d, %Y') if suggestion.reviewed_at else '' }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No suggestions found</h3>
+        <p class="text-gray-600">
+            {% if status_filter == 'pending' %}
+            No pending suggestions to review.
+            {% elif status_filter == 'approved' %}
+            No approved suggestions yet.
+            {% elif status_filter == 'rejected' %}
+            No rejected suggestions.
+            {% else %}
+            Users haven't submitted any source suggestions yet.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

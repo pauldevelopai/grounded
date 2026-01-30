@@ -6,12 +6,17 @@
 <div class="px-4 sm:px-0">
 
     <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Sources & Citations</h1>
-        <p class="mt-2 text-gray-600 max-w-2xl">
-            {{ total_entries }} verified citations grounding {{ product_name }}'s claims.
-            Each entry links to a real, checkable source with a relevant extract.
-        </p>
+    <div class="mb-6 flex items-start justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Sources & Citations</h1>
+            <p class="mt-2 text-gray-600 max-w-2xl">
+                {{ total_entries }} verified citations grounding {{ product_name }}'s claims.
+                Each entry links to a real, checkable source with a relevant extract.
+            </p>
+        </div>
+        <a href="/sources/suggest" class="flex-shrink-0 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium">
+            + Suggest a Source
+        </a>
     </div>
 
     <!-- Filters -->
@@ -116,7 +121,8 @@
     </div>
     {% endif %}
 
-    <!-- Source Entries -->
+    <!-- Source Entries - Only show when a filter is active -->
+    {% if selected_batch or q or source_type %}
     <div class="space-y-4">
         {% for entry in entries %}
         <div class="bg-white rounded-lg shadow hover:shadow-md transition p-6">
@@ -209,6 +215,7 @@
         </div>
         {% endif %}
     </div>
+    {% endif %}
 
 </div>
 {% endblock %}

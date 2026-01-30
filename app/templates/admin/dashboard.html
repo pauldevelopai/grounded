@@ -125,6 +125,25 @@
                 Manage discovery &rarr;
             </a>
         </div>
+
+        <!-- Suggested Sources -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Source Suggestions</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.pending_sources }}</p>
+                    <p class="text-xs {% if stats.pending_sources > 0 %}text-orange-600 font-medium{% else %}text-gray-500{% endif %} mt-1">pending review</p>
+                </div>
+                <div class="text-teal-600">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                </div>
+            </div>
+            <a href="/admin/sources" class="block mt-4 text-sm text-blue-600 hover:text-blue-800">
+                Review suggestions &rarr;
+            </a>
+        </div>
     </div>
 
     <!-- Quick Actions -->

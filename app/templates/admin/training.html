@@ -1,0 +1,161 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Training Data Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Training Data Management</h1>
+        <p class="text-gray-600 mt-1">Manage how user data, sources, and tool data is sorted and ingested into the system.</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm text-gray-500">Total Chunks</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.total_chunks }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm text-gray-500">Tool Chunks</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.tool_chunks }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm text-gray-500">Source Chunks</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.source_chunks }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-sm text-gray-500">Other Chunks</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.other_chunks }}</p>
+        </div>
+    </div>
+
+    <!-- Data Sources Section -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Data Sources</h2>
+            <p class="text-sm text-gray-600">Manage what data is indexed for RAG search.</p>
+        </div>
+        <div class="p-6 space-y-4">
+            <!-- Kit Data -->
+            <div class="border rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-900">Kit Data (Tools & Clusters)</h3>
+                        <p class="text-sm text-gray-500">{{ stats.kit_tools }} tools, {{ stats.kit_clusters }} clusters (7 kit + 1 admin-approved)</p>
+                        {% if stats.tool_chunks > 0 %}
+                        <p class="text-sm text-green-600 mt-1">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            {{ stats.tool_chunks }} tool chunks indexed
+                        </p>
+                        {% else %}
+                        <p class="text-sm text-yellow-600 mt-1">Not yet indexed</p>
+                        {% endif %}
+                    </div>
+                    <form action="/admin/documents/ingest-kit" method="POST">
+                        <input type="hidden" name="create_embeddings" value="true">
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                                onclick="return confirm('Re-ingest all kit data? This will update tool and cluster embeddings.')">
+                            Re-ingest Kit
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sources Data -->
+            <div class="border rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-900">Citation Sources</h3>
+                        <p class="text-sm text-gray-500">{{ stats.static_sources }} static + {{ stats.community_sources }} community-submitted sources</p>
+                        {% if stats.indexed_source_chunks > 0 %}
+                        <p class="text-sm text-green-600 mt-1">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            {{ stats.indexed_source_chunks }} source chunks indexed
+                        </p>
+                        {% else %}
+                        <p class="text-sm text-yellow-600 mt-1">Not yet indexed</p>
+                        {% endif %}
+                    </div>
+                    <form action="/admin/training/ingest-sources" method="POST">
+                        <button type="submit"
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                                onclick="return confirm('Ingest all sources into the RAG system?')">
+                            Re-ingest Sources
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- User Activity Data -->
+            <div class="border rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-900">User Activity Patterns</h3>
+                        <p class="text-sm text-gray-500">{{ stats.user_activities }} activity records from {{ stats.active_users }} users</p>
+                    </div>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-md text-sm">Used for recommendations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chunk Types Breakdown -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Indexed Content Breakdown</h2>
+            <p class="text-sm text-gray-600">Content types currently in the RAG search index.</p>
+        </div>
+        <div class="p-6">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="text-left text-xs font-medium text-gray-500 uppercase">
+                        <th class="pb-3">Content Type</th>
+                        <th class="pb-3">Chunks</th>
+                        <th class="pb-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for chunk_type in chunk_types %}
+                    <tr>
+                        <td class="py-3 text-sm font-medium text-gray-900">{{ chunk_type.type }}</td>
+                        <td class="py-3 text-sm text-gray-600">{{ chunk_type.count }}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Indexed</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="bg-red-50 rounded-lg shadow border border-red-200">
+        <div class="px-6 py-4 border-b border-red-200">
+            <h2 class="text-lg font-semibold text-red-900">Danger Zone</h2>
+            <p class="text-sm text-red-600">These actions cannot be undone.</p>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-medium text-gray-900">Clear All Embeddings</h3>
+                    <p class="text-sm text-gray-500">Remove all indexed content. You'll need to re-ingest everything.</p>
+                </div>
+                <form action="/admin/training/clear-embeddings" method="POST">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                            onclick="return confirm('WARNING: This will delete ALL indexed content. Are you absolutely sure?')">
+                        Clear All
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

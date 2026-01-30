@@ -52,6 +52,22 @@
     <style>
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: block; }
+
+        /* Increase base font size for better readability */
+        html {
+            font-size: 18px; /* Up from default 16px - makes all rem-based sizes larger */
+        }
+
+        /* Ensure minimum readable sizes for small text classes */
+        .text-xs {
+            font-size: 0.85rem !important; /* ~15px instead of ~12px */
+            line-height: 1.4 !important;
+        }
+        .text-sm {
+            font-size: 0.95rem !important; /* ~17px instead of ~14px */
+            line-height: 1.5 !important;
+        }
+
         /* Brand color utilities using CSS custom properties */
         :root {
             --brand-primary: {{ brand_primary_color|default('#3B82F6') }};
