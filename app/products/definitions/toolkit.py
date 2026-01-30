@@ -85,9 +85,9 @@ AI_TOOLKIT_PRODUCT = Product(
         ),
         NavigationItem(
             label="History",
-            route="/toolkit/history",
+            route="/toolkit",
             icon="clock",
-            requires_auth=False,
+            requires_auth=True,  # History requires login
         ),
         NavigationItem(
             label="Strategy",

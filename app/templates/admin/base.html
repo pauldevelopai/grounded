@@ -23,6 +23,11 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
+    {# ============================================================================= #}
+    {# PRODUCT SWITCHING BANNER - Hidden for now, enable with show_product_switching #}
+    {# To restore: set show_product_switching=true in template context or remove the if block #}
+    {# ============================================================================= #}
+    {% if show_product_switching|default(false) %}
     <!-- Admin Context Banner - ALWAYS VISIBLE -->
     <div class="sticky top-0 z-50 {{ admin_context_class|default('bg-blue-600') }} text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,6 +114,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Global Navigation -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
@@ -123,6 +129,7 @@
                     </div>
                 </div>
                 <div class="flex items-center">
+                    <a href="/" class="text-sm text-gray-500 hover:text-gray-700 mr-4">&larr; App</a>
                     {% if user %}
                     <span class="text-sm text-gray-700 mr-3">{{ user.display_name or user.email }}</span>
                     <form action="/auth/logout" method="POST" class="inline">
@@ -138,11 +145,14 @@
     <div class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex space-x-1 py-2 overflow-x-auto">
+                {# Master View tab - Hidden for now, enable with show_product_switching #}
+                {% if show_product_switching|default(false) %}
                 <a href="/admin/master"
                    class="px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap
                           {% if active_admin_page == 'master' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
                     Master View
                 </a>
+                {% endif %}
                 <a href="/admin"
                    class="px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap
                           {% if active_admin_page == 'dashboard' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">

@@ -196,13 +196,21 @@
 
     <!-- Recommendations -->
     {% if show_suggested and suggested_tools %}
+    <div class="mb-4">
+        <p class="text-sm text-gray-500">
+            Showing your top {{ suggested_tools|length }} recommendations. These update as you browse, search, and interact with tools.
+        </p>
+    </div>
     <div class="space-y-4">
         {% for rec in suggested_tools %}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
-                    <!-- Tool Header -->
+                    <!-- Tool Header with Rank -->
                     <div class="flex items-center gap-3 mb-2">
+                        <span class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                            {{ loop.index }}
+                        </span>
                         <a href="/tools/{{ rec.tool_slug }}"
                            class="text-xl font-semibold text-gray-900 hover:text-indigo-600">
                             {{ rec.tool_name }}

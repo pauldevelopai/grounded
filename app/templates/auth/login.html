@@ -29,8 +29,11 @@
             </div>
             {% endif %}
 
-            <!-- Product Selection -->
-            {% if available_products %}
+            {# ============================================================================= #}
+            {# PRODUCT SELECTION - Hidden for now, enable with show_product_switching #}
+            {# To restore: set show_product_switching=true in template context or remove the if block #}
+            {# ============================================================================= #}
+            {% if show_product_switching|default(false) and available_products %}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Application</label>
                 <div class="grid grid-cols-1 gap-3">

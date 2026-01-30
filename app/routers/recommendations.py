@@ -57,12 +57,12 @@ async def for_you_page(
             }
         )
 
-    # Get recommendations for logged-in user
+    # Get recommendations for logged-in user (limited to top 5)
     recommendations = get_recommendations(
         db=db,
         user=user,
         use_case=use_case,
-        limit=12,
+        limit=5,
     )
     logger.info(f"Got {len(recommendations)} recommendations for use_case={use_case}")
 

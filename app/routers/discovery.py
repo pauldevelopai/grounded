@@ -612,6 +612,12 @@ async def edit_tool(
     purpose: str = Form(""),
     ai_summary: str = Form(""),
     categories: str = Form(""),
+    github_url: str = Form(""),
+    docs_url: str = Form(""),
+    pricing_url: str = Form(""),
+    cdi_cost: Optional[int] = Form(None),
+    cdi_difficulty: Optional[int] = Form(None),
+    cdi_invasiveness: Optional[int] = Form(None),
     user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
@@ -627,9 +633,38 @@ async def edit_tool(
     tool.purpose = purpose if purpose else None
     tool.ai_summary = ai_summary if ai_summary else None
     tool.categories = [c.strip() for c in categories.split(",") if c.strip()] if categories else []
+    tool.github_url = github_url if github_url else None
+    tool.docs_url = docs_url if docs_url else None
+    tool.pricing_url = pricing_url if pricing_url else None
+
+    # CDI scores (validate 0-10 range)
+    if cdi_cost is not None:
+        tool.cdi_cost = max(0, min(10, cdi_cost))
+    if cdi_difficulty is not None:
+        tool.cdi_difficulty = max(0, min(10, cdi_difficulty))
+    if cdi_invasiveness is not None:
+        tool.cdi_invasiveness = max(0, min(10, cdi_invasiveness))
+
     tool.updated_at = datetime.now(timezone.utc)
 
     db.commit()
+
+    return RedirectResponse(url=f"/admin/discovery/tools/{tool_id}", status_code=303)
+
+
+@router.post("/tools/{tool_id}/enrich")
+async def enrich_tool_page(
+    tool_id: str,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Re-enrich a tool by fetching fresh content from its website and generating AI descriptions."""
+    from app.services.discovery.enrichment import enrich_tool_by_id
+
+    tool = enrich_tool_by_id(db, tool_id)
+
+    if not tool:
+        raise HTTPException(status_code=404, detail="Tool not found")
 
     return RedirectResponse(url=f"/admin/discovery/tools/{tool_id}", status_code=303)
 
