@@ -44,6 +44,34 @@
                     </div>
                     {% endif %}
 
+                    {% if tool.purpose %}
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-gray-700">Purpose (Journalism Relevance)</h3>
+                        <p class="text-gray-600 mt-1">{{ tool.purpose }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.ai_summary %}
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-gray-700">AI Summary</h3>
+                        <p class="text-gray-600 mt-1 italic">{{ tool.ai_summary }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.raw_description and tool.raw_description != tool.description %}
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-gray-500">Original Scraped Description</h3>
+                        <p class="text-gray-400 mt-1 text-sm">{{ tool.raw_description }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if tool.github_url %}
+                    <div class="mt-4">
+                        <h3 class="text-sm font-medium text-gray-700">GitHub</h3>
+                        <a href="{{ tool.github_url }}" target="_blank" class="text-blue-600 hover:underline text-sm">{{ tool.github_url }}</a>
+                    </div>
+                    {% endif %}
+
                     {% if tool.categories %}
                     <div class="mt-4">
                         <h3 class="text-sm font-medium text-gray-700">Categories</h3>
@@ -323,8 +351,21 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea name="description" rows="3"
+                            <textarea name="description" rows="4"
                                       class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm">{{ tool.description or '' }}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">Main description of what the tool is and does.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Purpose (Journalism Relevance)</label>
+                            <textarea name="purpose" rows="3"
+                                      class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm">{{ tool.purpose or '' }}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">Why this tool is relevant for journalists and newsrooms.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">AI Summary</label>
+                            <input type="text" name="ai_summary" value="{{ tool.ai_summary or '' }}"
+                                   class="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                            <p class="text-xs text-gray-500 mt-1">One-line summary of the tool.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Categories (comma-separated)</label>

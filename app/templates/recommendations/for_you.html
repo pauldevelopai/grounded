@@ -17,37 +17,159 @@
     {% include "components/login_prompt.html" %}
     {% else %}
 
+    <!-- How Recommendations Work - Always Visible -->
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <span>How We Personalize Your Recommendations</span>
+        </h2>
+
+        <p class="text-gray-600 mb-4">
+            Every recommendation is scored on a 0-100% scale based on how well it fits <strong>your specific context</strong>.
+            Different users get different recommendations because the scoring considers:
+        </p>
+
+        <!-- Scoring Components -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            <div class="bg-blue-50 rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-blue-600 font-bold text-lg">30%</span>
+                </div>
+                <span class="font-medium text-gray-800 text-sm">CDI Fit</span>
+                <p class="text-xs text-gray-600 mt-1">
+                    Tools penalized if Cost, Difficulty, or Invasiveness exceed your limits
+                </p>
+            </div>
+
+            <div class="bg-purple-50 rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-purple-600 font-bold text-lg">25%</span>
+                </div>
+                <span class="font-medium text-gray-800 text-sm">Use Case Match</span>
+                <p class="text-xs text-gray-600 mt-1">
+                    Tools matching your saved use cases score higher
+                </p>
+            </div>
+
+            <div class="bg-yellow-50 rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-yellow-600 font-bold text-lg">20%</span>
+                </div>
+                <span class="font-medium text-gray-800 text-sm">Reviews</span>
+                <p class="text-xs text-gray-600 mt-1">
+                    Reviews from similar users weighted more heavily
+                </p>
+            </div>
+
+            <div class="bg-green-50 rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-green-600 font-bold text-lg">15%</span>
+                </div>
+                <span class="font-medium text-gray-800 text-sm">Your Activity</span>
+                <p class="text-xs text-gray-600 mt-1">
+                    Clusters you've browsed and searches you've made
+                </p>
+            </div>
+
+            <div class="bg-gray-100 rounded-lg p-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-gray-600 font-bold text-lg">10%</span>
+                </div>
+                <span class="font-medium text-gray-800 text-sm">Profile Fit</span>
+                <p class="text-xs text-gray-600 mt-1">
+                    Country and org-type specific considerations
+                </p>
+            </div>
+        </div>
+
+        <!-- Examples Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
+                <div class="font-medium text-indigo-900 text-sm mb-1">Example: Small Newsroom</div>
+                <ul class="text-xs text-indigo-700 space-y-0.5">
+                    <li>Budget: minimal → Max Cost: 2/10</li>
+                    <li>Experience: beginner → Max Difficulty: 3/10</li>
+                    <li>Data: internal → Max Invasiveness: 6/10</li>
+                </ul>
+                <p class="mt-1 text-xs text-indigo-600 italic">→ Free, easy, local tools rank highest</p>
+            </div>
+            <div class="bg-emerald-50 rounded-lg p-3 border border-emerald-100">
+                <div class="font-medium text-emerald-900 text-sm mb-1">Example: Enterprise Newsroom</div>
+                <ul class="text-xs text-emerald-700 space-y-0.5">
+                    <li>Budget: large → Max Cost: 10/10</li>
+                    <li>Experience: advanced → Max Difficulty: 10/10</li>
+                    <li>Data: regulated → Max Invasiveness: 2/10</li>
+                </ul>
+                <p class="mt-1 text-xs text-emerald-600 italic">→ Self-hosted, compliant tools rank highest</p>
+            </div>
+        </div>
+    </div>
+
     <!-- User Context Summary -->
     {% if user_context %}
     <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
-        <h3 class="text-sm font-semibold text-indigo-900 mb-2">Your Profile Settings</h3>
-        <div class="flex flex-wrap gap-4 text-sm">
-            {% if user_context.experience_level %}
-            <div>
-                <span class="text-indigo-600">Experience:</span>
-                <span class="font-medium text-indigo-900 capitalize">{{ user_context.experience_level }}</span>
+        <h3 class="text-sm font-semibold text-indigo-900 mb-2">Your Personalization Context</h3>
+
+        <!-- Profile Settings -->
+        {% if user_context.experience_level or user_context.budget or user_context.data_sensitivity %}
+        <div class="mb-3">
+            <div class="text-xs font-medium text-indigo-700 mb-1">Profile Settings:</div>
+            <div class="flex flex-wrap gap-4 text-sm">
+                {% if user_context.experience_level %}
+                <div>
+                    <span class="text-indigo-600">Experience:</span>
+                    <span class="font-medium text-indigo-900 capitalize">{{ user_context.experience_level }}</span>
+                </div>
+                {% endif %}
+                {% if user_context.budget %}
+                <div>
+                    <span class="text-indigo-600">Budget:</span>
+                    <span class="font-medium text-indigo-900 capitalize">{{ user_context.budget }}</span>
+                </div>
+                {% endif %}
+                {% if user_context.data_sensitivity %}
+                <div>
+                    <span class="text-indigo-600">Data Sensitivity:</span>
+                    <span class="font-medium text-indigo-900 capitalize">{{ user_context.data_sensitivity }}</span>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
-            {% if user_context.budget %}
-            <div>
-                <span class="text-indigo-600">Budget:</span>
-                <span class="font-medium text-indigo-900 capitalize">{{ user_context.budget }}</span>
-            </div>
-            {% endif %}
-            {% if user_context.data_sensitivity %}
-            <div>
-                <span class="text-indigo-600">Data Sensitivity:</span>
-                <span class="font-medium text-indigo-900 capitalize">{{ user_context.data_sensitivity }}</span>
-            </div>
-            {% endif %}
         </div>
+        {% endif %}
+
+        <!-- Activity Signals -->
+        {% if user_context.searched_queries or user_context.browsed_clusters or user_context.viewed_tools %}
+        <div class="mb-3">
+            <div class="text-xs font-medium text-indigo-700 mb-1">Your Activity (used for recommendations):</div>
+            <div class="flex flex-wrap gap-2 text-xs">
+                {% for query in user_context.searched_queries %}
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">Searched: "{{ query }}"</span>
+                {% endfor %}
+                {% for cluster in user_context.browsed_clusters %}
+                <span class="px-2 py-1 bg-green-100 text-green-700 rounded">Browsed: {{ cluster }}</span>
+                {% endfor %}
+                {% for tool in user_context.viewed_tools[:3] %}
+                <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded">Viewed: {{ tool }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CDI Constraints -->
         {% if user_context.constraints %}
-        <div class="mt-2 text-xs text-indigo-600">
+        <div class="text-xs text-indigo-600">
             CDI limits: Cost &le; {{ user_context.constraints.max_cost }},
             Difficulty &le; {{ user_context.constraints.max_difficulty }},
             Invasiveness &le; {{ user_context.constraints.max_invasiveness }}
         </div>
         {% endif %}
+
+        <!-- No profile message -->
+        {% if not user_context.experience_level and not user_context.budget and not user_context.data_sensitivity %}
+        <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+            <strong>Tip:</strong> Complete your profile for more personalized recommendations!
+        </div>
+        {% endif %}
+
         <div class="mt-3">
             <a href="/profile" class="text-sm text-indigo-700 hover:text-indigo-900 font-medium">
                 Update your profile to improve recommendations &rarr;
@@ -105,18 +227,18 @@
                     <!-- Score Breakdown -->
                     {% if rec.score_breakdown %}
                     <div class="flex flex-wrap gap-4 text-xs text-gray-500 mb-4">
-                        <span>Base: {{ rec.score_breakdown.base_score | round(0) }}</span>
-                        {% if rec.score_breakdown.profile_bonus > 0 %}
-                        <span class="text-green-600">+{{ rec.score_breakdown.profile_bonus | round(0) }} profile match</span>
+                        <span>CDI Fit: {{ rec.score_breakdown.cdi_fit | round(0) }}</span>
+                        {% if rec.score_breakdown.use_case_match > 0 %}
+                        <span class="text-green-600">+{{ rec.score_breakdown.use_case_match | round(0) }} use case</span>
                         {% endif %}
-                        {% if rec.score_breakdown.activity_bonus > 0 %}
-                        <span class="text-blue-600">+{{ rec.score_breakdown.activity_bonus | round(0) }} activity</span>
+                        {% if rec.score_breakdown.activity_relevance > 0 %}
+                        <span class="text-blue-600">+{{ rec.score_breakdown.activity_relevance | round(0) }} activity</span>
                         {% endif %}
-                        {% if rec.score_breakdown.review_bonus > 0 %}
-                        <span class="text-purple-600">+{{ rec.score_breakdown.review_bonus | round(0) }} reviews</span>
+                        {% if rec.score_breakdown.review_signal > 0 %}
+                        <span class="text-purple-600">+{{ rec.score_breakdown.review_signal | round(0) }} reviews</span>
                         {% endif %}
-                        {% if rec.score_breakdown.penalty > 0 %}
-                        <span class="text-red-600">-{{ rec.score_breakdown.penalty | round(0) }} constraints</span>
+                        {% if rec.score_breakdown.profile_fit > 0 %}
+                        <span class="text-indigo-600">+{{ rec.score_breakdown.profile_fit | round(0) }} profile</span>
                         {% endif %}
                     </div>
                     {% endif %}
@@ -206,13 +328,6 @@
                 Browse All Tools
             </a>
         </div>
-    </div>
-    {% endif %}
-
-    <!-- Scoring Explanation -->
-    {% if show_suggested %}
-    <div class="mt-8">
-        {% include "components/scoring_explanation.html" %}
     </div>
     {% endif %}
 

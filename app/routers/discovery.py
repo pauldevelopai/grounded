@@ -609,6 +609,8 @@ async def edit_tool(
     name: str = Form(...),
     url: str = Form(...),
     description: str = Form(""),
+    purpose: str = Form(""),
+    ai_summary: str = Form(""),
     categories: str = Form(""),
     user: User = Depends(require_admin),
     db: Session = Depends(get_db)
@@ -622,6 +624,8 @@ async def edit_tool(
     tool.name = name
     tool.url = url
     tool.description = description
+    tool.purpose = purpose if purpose else None
+    tool.ai_summary = ai_summary if ai_summary else None
     tool.categories = [c.strip() for c in categories.split(",") if c.strip()] if categories else []
     tool.updated_at = datetime.now(timezone.utc)
 

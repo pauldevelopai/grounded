@@ -278,6 +278,12 @@ def build_explanation(
 ) -> tuple[str, list[Citation]]:
     """Build explanation text and citations for a recommendation.
 
+    Explanations are personalized based on:
+    - User's CDI constraints (budget, experience, data sensitivity)
+    - User's saved use cases
+    - User's browsing and search activity
+    - Reviews from similar users
+
     Returns:
         Tuple of (explanation_text, citations_list)
     """
@@ -289,39 +295,39 @@ def build_explanation(
     difficulty = cdi.get("difficulty", 5)
     invasiveness = cdi.get("invasiveness", 5)
 
-    # CDI explanation
-    cdi_reasons = []
-    if cost <= context.max_cost:
-        if cost == 0:
-            cdi_reasons.append("Free")
-        elif cost <= 2:
-            cdi_reasons.append(f"Low cost ({cost}/10)")
-        else:
-            cdi_reasons.append(f"Cost ({cost}/10) fits your {context.budget or 'budget'}")
+    tool_cluster = tool.get("cluster_slug", "")
+    tool_slug = tool.get("slug", "")
+    tool_name = tool.get("name", "").lower()
+    tool_tags = [t.lower() for t in tool.get("tags", [])]
 
-    if difficulty <= context.max_difficulty:
-        if difficulty <= 3:
-            cdi_reasons.append("beginner-friendly")
-        elif context.ai_experience_level == "advanced":
-            cdi_reasons.append("matches your advanced experience")
+    # 1. Activity-based explanation (most personal - put first if present)
+    activity_reasons = []
 
-    if invasiveness <= context.max_invasiveness:
-        if invasiveness == 0:
-            cdi_reasons.append("runs locally - no data sent externally")
-        elif invasiveness <= 2:
-            cdi_reasons.append("minimal data exposure")
-        elif context.data_sensitivity in ["regulated", "pii"]:
-            cdi_reasons.append(f"data handling ({invasiveness}/10) fits your sensitivity requirements")
+    # Check if user browsed this cluster
+    if tool_cluster in context.browsed_clusters:
+        cluster_name = tool.get("cluster_name", tool_cluster)
+        activity_reasons.append(f"You recently browsed {cluster_name} tools")
 
-    if cdi_reasons:
-        explanation_parts.append(". ".join(cdi_reasons[:2]))
-        citations.append(Citation(
-            type=CitationType.CDI_DATA,
-            text=f"Cost: {cost}/10, Difficulty: {difficulty}/10, Invasiveness: {invasiveness}/10",
-            source="AI Editorial Toolkit CDI Scores",
-        ))
+    # Check if search queries match
+    for query in context.searched_queries:
+        query_lower = query.lower()
+        if query_lower in tool_name or any(query_lower in tag for tag in tool_tags):
+            activity_reasons.append(f"Matches your search for \"{query}\"")
+            break
 
-    # Use case match explanation
+    # Check if user viewed similar tools
+    for viewed in context.viewed_tools[:5]:
+        if viewed != tool_slug:
+            viewed_tool = get_tool(viewed)
+            if viewed_tool and viewed_tool.get("cluster_slug") == tool_cluster:
+                viewed_name = viewed_tool.get("name", viewed)
+                activity_reasons.append(f"Similar to {viewed_name} that you viewed")
+                break
+
+    if activity_reasons:
+        explanation_parts.append(activity_reasons[0])
+
+    # 2. Use case match explanation
     tool_use_cases = set(tool.get("cross_references", {}).get("use_cases", []))
     user_use_cases = set(context.use_cases)
     matching_use_cases = tool_use_cases & user_use_cases
@@ -329,7 +335,49 @@ def build_explanation(
         uc_list = ", ".join(list(matching_use_cases)[:2])
         explanation_parts.append(f"Matches your use cases: {uc_list}")
 
-    # Review insight
+    # 3. CDI explanation (personalized to user's constraints)
+    cdi_reasons = []
+    if cost <= context.max_cost:
+        if cost == 0:
+            cdi_reasons.append("Free to use")
+        elif cost <= 2:
+            cdi_reasons.append(f"Low cost ({cost}/10)")
+        elif context.budget:
+            cdi_reasons.append(f"Fits your {context.budget} budget")
+
+    if difficulty <= context.max_difficulty:
+        if difficulty <= 3 and context.ai_experience_level == "beginner":
+            cdi_reasons.append("beginner-friendly")
+        elif context.ai_experience_level == "advanced" and difficulty >= 5:
+            cdi_reasons.append("advanced features for your experience level")
+        elif context.ai_experience_level == "intermediate":
+            cdi_reasons.append("matches your intermediate experience")
+
+    if invasiveness <= context.max_invasiveness:
+        if invasiveness == 0:
+            cdi_reasons.append("runs locally - your data stays on your machine")
+        elif invasiveness <= 2:
+            cdi_reasons.append("minimal data exposure - good for sensitive work")
+        elif context.data_sensitivity in ["regulated", "pii"]:
+            cdi_reasons.append(f"data handling fits your {context.data_sensitivity} requirements")
+
+    if cdi_reasons:
+        explanation_parts.append(cdi_reasons[0])
+        citations.append(Citation(
+            type=CitationType.CDI_DATA,
+            text=f"Cost: {cost}/10, Difficulty: {difficulty}/10, Invasiveness: {invasiveness}/10",
+            source="AI Editorial Toolkit CDI Scores",
+        ))
+
+    # 4. Organization-specific insights
+    if context.organisation_type:
+        if context.organisation_type == "freelance" and cost <= 2:
+            if "Free to use" not in explanation_parts[0] if explanation_parts else True:
+                explanation_parts.append("Budget-friendly for freelancers")
+        elif context.organisation_type == "newsroom" and "team" in tool.get("description", "").lower():
+            explanation_parts.append("Supports team collaboration")
+
+    # 5. Review insight
     relevant_reviews = [r for r in reviews if r.get("comment")]
     if relevant_reviews:
         # Prefer reviews from same org type
@@ -346,6 +394,11 @@ def build_explanation(
             comment = best_review["comment"]
             if len(comment) > 100:
                 comment = comment[:100] + "..."
+
+            reviewer_note = ""
+            if best_review.get("reviewer_org_type") == context.organisation_type:
+                reviewer_note = f" from a fellow {context.organisation_type}"
+
             citations.append(Citation(
                 type=CitationType.REVIEW,
                 text=comment,
@@ -355,17 +408,27 @@ def build_explanation(
                 helpful_count=best_review.get("helpful_count", 0),
             ))
 
-    # Playbook insight
+    # 6. Playbook insight
     if playbook and playbook.status == "published":
         if playbook.best_use_cases:
-            explanation_parts.append(f"Best for: {playbook.best_use_cases[:100]}")
+            explanation_parts.append(f"Best for: {playbook.best_use_cases[:80]}")
             citations.append(Citation(
                 type=CitationType.PLAYBOOK,
                 text=playbook.best_use_cases[:200],
                 source="Tool Playbook",
             ))
 
-    explanation = ". ".join(explanation_parts) if explanation_parts else f"Recommended based on your profile and activity."
+    # Build final explanation
+    if explanation_parts:
+        explanation = ". ".join(explanation_parts[:3])  # Limit to 3 most relevant points
+    else:
+        # Fallback with some personalization
+        fallback_parts = []
+        if context.organisation_type:
+            fallback_parts.append(f"Recommended for {context.organisation_type}s")
+        if context.ai_experience_level:
+            fallback_parts.append(f"suitable for {context.ai_experience_level} users")
+        explanation = " ".join(fallback_parts) if fallback_parts else "Recommended based on your profile"
 
     return explanation, citations
 
@@ -543,7 +606,7 @@ def get_recommendations(
         db: Database session
         user: The user to get recommendations for
         query: Optional search query to filter tools
-        use_case: Optional use case to filter by
+        use_case: Optional use case/cluster slug to filter by
         limit: Maximum number of recommendations
 
     Returns:
@@ -556,11 +619,12 @@ def get_recommendations(
         # Search by query text
         candidates = search_tools(query=query)
     elif use_case:
-        # Filter by use case
+        # Filter by cluster slug (use_case dropdown shows clusters)
         all_tools = get_all_tools()
         candidates = [
             t for t in all_tools
-            if use_case in t.get("cross_references", {}).get("use_cases", [])
+            if t.get("cluster_slug") == use_case or
+            use_case in t.get("cross_references", {}).get("use_cases", [])
         ]
     else:
         # All tools are candidates

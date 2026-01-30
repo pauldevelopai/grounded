@@ -25,9 +25,12 @@ class DiscoveredTool(Base):
     docs_url = Column(String, nullable=True)
     pricing_url = Column(String, nullable=True)
 
-    # Description
+    # Description and content
     description = Column(Text, nullable=True)
     raw_description = Column(Text, nullable=True)  # Original scraped text
+    ai_summary = Column(Text, nullable=True)  # AI-generated summary
+    purpose = Column(Text, nullable=True)  # What the tool does / journalism relevance
+    github_url = Column(String, nullable=True)  # GitHub repo URL if applicable
 
     # Categorization
     categories = Column(JSONB, nullable=True, default=list)  # List of categories/use cases

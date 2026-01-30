@@ -27,6 +27,9 @@ from app.templates_engine import templates
 page_router = APIRouter(tags=["recommendations-pages"])
 
 
+import logging
+logger = logging.getLogger(__name__)
+
 @page_router.get("/for-you", response_class=HTMLResponse)
 async def for_you_page(
     request: Request,
@@ -35,6 +38,8 @@ async def for_you_page(
     db: Session = Depends(get_db),
 ):
     """Dedicated page for personalized tool suggestions."""
+    logger.info(f"For You page: user={user.email if user else 'anonymous'}, use_case={use_case}")
+
     # If not logged in, show login prompt
     if not user:
         return templates.TemplateResponse(
@@ -59,9 +64,11 @@ async def for_you_page(
         use_case=use_case,
         limit=12,
     )
+    logger.info(f"Got {len(recommendations)} recommendations for use_case={use_case}")
 
     # Convert to dicts for template
     suggested_tools = [r.model_dump() if hasattr(r, 'model_dump') else r for r in recommendations]
+    logger.info(f"Converted to {len(suggested_tools)} suggested_tools")
 
     # Build user context summary
     context = build_user_context(db, user)
@@ -75,7 +82,12 @@ async def for_you_page(
             "max_difficulty": context.max_difficulty,
             "max_invasiveness": context.max_invasiveness,
         },
+        # Activity signals for transparency
+        "searched_queries": context.searched_queries[:3] if context.searched_queries else [],
+        "browsed_clusters": context.browsed_clusters[:3] if context.browsed_clusters else [],
+        "viewed_tools": context.viewed_tools[:5] if context.viewed_tools else [],
     }
+    logger.info(f"User context: budget={context.budget}, exp={context.ai_experience_level}, activity={len(context.searched_queries)} searches, {len(context.browsed_clusters)} clusters")
 
     # Get clusters for use case filtering
     clusters = get_all_clusters()

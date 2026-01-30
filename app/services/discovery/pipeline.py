@@ -512,11 +512,13 @@ def approve_tool(
     cdi_cost: int | None = None,
     cdi_difficulty: int | None = None,
     cdi_invasiveness: int | None = None,
+    skip_enrichment: bool = False,
 ) -> DiscoveredTool:
     """
     Approve a discovered tool with optional CDI scores.
 
     When approved, the tool becomes immediately visible on the public /tools page.
+    The tool is also enriched with AI-generated descriptions and purpose.
 
     Args:
         db: Database session
@@ -526,6 +528,7 @@ def approve_tool(
         cdi_cost: Cost score 0-10 (optional)
         cdi_difficulty: Difficulty score 0-10 (optional)
         cdi_invasiveness: Invasiveness score 0-10 (optional)
+        skip_enrichment: Skip AI content generation (for testing)
 
     Returns:
         Approved DiscoveredTool
@@ -549,6 +552,16 @@ def approve_tool(
 
     db.commit()
     db.refresh(tool)
+
+    # Enrich tool with AI-generated content
+    if not skip_enrichment:
+        try:
+            from app.services.discovery.enrichment import enrich_tool
+            tool = enrich_tool(db, tool)
+            logger.info(f"Tool enriched with AI content: {tool.name}")
+        except Exception as e:
+            logger.error(f"Failed to enrich tool {tool.name}: {e}")
+            # Continue without enrichment - tool is still approved
 
     logger.info(f"Tool approved: {tool.name} (ID: {tool_id})")
     return tool
