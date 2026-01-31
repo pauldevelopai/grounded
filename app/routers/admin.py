@@ -12,7 +12,7 @@ from app.db import get_db
 from app.dependencies import require_admin
 from app.models.auth import User
 from app.services.auth import hash_password
-from app.models.toolkit import ToolkitDocument, ToolkitChunk, ChatLog, Feedback, UserActivity, AppFeedback
+from app.models.toolkit import ToolkitDocument, ToolkitChunk, ChatLog, Feedback, UserActivity, AppFeedback, StrategyPlan
 from app.models.review import ToolReview, ReviewVote, ReviewFlag
 from app.models.discovery import DiscoveredTool
 from app.models.suggested_source import SuggestedSource
@@ -1599,6 +1599,82 @@ async def admin_training(
         .all()
     )
 
+    # ============================================
+    # STRATEGY GENERATION DATA
+    # ============================================
+
+    # Total strategies generated
+    total_strategies = db.query(func.count(StrategyPlan.id)).scalar() or 0
+
+    # Strategies by user (top 10)
+    strategies_by_user = (
+        db.query(
+            User.id,
+            User.email,
+            User.display_name,
+            func.count(StrategyPlan.id).label("strategy_count")
+        )
+        .join(StrategyPlan, User.id == StrategyPlan.user_id)
+        .group_by(User.id)
+        .order_by(desc("strategy_count"))
+        .limit(10)
+        .all()
+    )
+
+    # Recent strategies with input data analysis
+    recent_strategies = (
+        db.query(StrategyPlan, User)
+        .join(User, StrategyPlan.user_id == User.id)
+        .order_by(desc(StrategyPlan.created_at))
+        .limit(10)
+        .all()
+    )
+
+    # Analyze strategy inputs
+    strategy_details = []
+    for strategy, strategy_user in recent_strategies:
+        inputs = strategy.inputs or {}
+
+        # Check which profile fields were populated
+        populated_fields = []
+        if inputs.get('role'):
+            populated_fields.append('role')
+        if inputs.get('org_type'):
+            populated_fields.append('org_type')
+        if inputs.get('risk_level'):
+            populated_fields.append('risk_level')
+        if inputs.get('data_sensitivity'):
+            populated_fields.append('data_sensitivity')
+        if inputs.get('budget'):
+            populated_fields.append('budget')
+        if inputs.get('deployment_pref'):
+            populated_fields.append('deployment_pref')
+        if inputs.get('use_cases'):
+            populated_fields.append('use_cases')
+
+        # Check if activity was included
+        has_activity = 'activity_summary' in inputs
+        activity_data = inputs.get('activity_summary', {})
+
+        strategy_details.append({
+            "id": str(strategy.id),
+            "user_email": strategy_user.email,
+            "user_display_name": strategy_user.display_name,
+            "created_at": strategy.created_at,
+            "inputs": inputs,
+            "populated_fields": populated_fields,
+            "populated_count": len(populated_fields),
+            "has_activity": has_activity,
+            "activity_searches": activity_data.get('tool_searches', [])[:3] if has_activity else [],
+            "citations_count": len(strategy.citations) if strategy.citations else 0,
+        })
+
+    # Count strategies with activity data
+    strategies_with_activity = sum(1 for s in strategy_details if s['has_activity'])
+
+    # Count strategies with complete profile
+    strategies_with_full_profile = sum(1 for s in strategy_details if s['populated_count'] >= 5)
+
     stats = {
         "total_chunks": total_chunks,
         "tool_chunks": tool_chunks,
@@ -1623,6 +1699,12 @@ async def admin_training(
             "activity_breakdown": activity_breakdown,
             "user_activity_details": user_activity_details,
             "recent_activities": recent_activities,
+            # Strategy generation data
+            "total_strategies": total_strategies,
+            "strategies_by_user": strategies_by_user,
+            "strategy_details": strategy_details,
+            "strategies_with_activity": strategies_with_activity,
+            "strategies_with_full_profile": strategies_with_full_profile,
             "active_admin_page": "training",
         }
     )

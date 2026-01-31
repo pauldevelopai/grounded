@@ -1,13 +1,13 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Edit Playbook: {{ tool.name if tool else 'Unknown' }}{% endblock %}
+{% block title %}Edit Use Case: {{ tool.name if tool else 'Unknown' }}{% endblock %}
 
 {% block content %}
         <!-- Breadcrumb -->
         <div class="mb-4">
-            <a href="/admin/playbooks" class="text-blue-600 hover:underline">Playbooks</a>
+            <a href="/admin/playbooks" class="text-blue-600 hover:underline">Use Cases</a>
             <span class="text-gray-400 mx-2">/</span>
-            <a href="/admin/playbooks/{{ playbook.id }}" class="text-blue-600 hover:underline">{{ tool.name if tool else 'Playbook' }}</a>
+            <a href="/admin/playbooks/{{ playbook.id }}" class="text-blue-600 hover:underline">{{ tool.name if tool else 'Use Case' }}</a>
             <span class="text-gray-400 mx-2">/</span>
             <span class="text-gray-600">Edit</span>
         </div>
@@ -16,7 +16,7 @@
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Edit Playbook</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Edit Use Case</h1>
                     {% if tool %}
                     <p class="text-gray-600 mt-1">{{ tool.name }}</p>
                     {% endif %}

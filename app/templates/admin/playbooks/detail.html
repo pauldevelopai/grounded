@@ -1,13 +1,13 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Playbook: {{ tool.name if tool else 'Unknown' }}{% endblock %}
+{% block title %}Use Case: {{ tool.name if tool else 'Unknown' }}{% endblock %}
 
 {% block content %}
         <!-- Breadcrumb -->
         <div class="mb-4">
-            <a href="/admin/playbooks" class="text-blue-600 hover:underline">Playbooks</a>
+            <a href="/admin/playbooks" class="text-blue-600 hover:underline">Use Cases</a>
             <span class="text-gray-400 mx-2">/</span>
-            <span class="text-gray-600">{{ tool.name if tool else 'Playbook' }}</span>
+            <span class="text-gray-600">{{ tool.name if tool else 'Use Case' }}</span>
         </div>
 
         <!-- Header with Actions -->

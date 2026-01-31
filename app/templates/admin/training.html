@@ -99,9 +99,220 @@
                         <h3 class="font-medium text-gray-900">User Activity Patterns</h3>
                         <p class="text-sm text-gray-500">{{ stats.user_activities }} activity records from {{ stats.active_users }} users</p>
                     </div>
-                    <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-md text-sm">Used for recommendations</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-600 rounded-md text-sm">Feeds recommendations</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- User Activity for Recommendations Section -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">User Activity → Recommendations Pipeline</h2>
+            <p class="text-sm text-gray-600">How user activity is collected and used to personalize recommendations.</p>
+        </div>
+        <div class="p-6">
+            <!-- How It Works -->
+            <div class="mb-6 bg-blue-50 rounded-lg p-4">
+                <h3 class="font-medium text-blue-900 mb-2">How Activity Influences Recommendations</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-blue-800">1. Collect</div>
+                        <p class="text-blue-700 text-xs mt-1">User searches, tool views, and cluster browsing are logged as activities</p>
+                    </div>
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-blue-800">2. Aggregate</div>
+                        <p class="text-blue-700 text-xs mt-1">Recent 100 activities per user are analyzed for patterns</p>
+                    </div>
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-blue-800">3. Score</div>
+                        <p class="text-blue-700 text-xs mt-1">Activity relevance contributes 15% to recommendation score</p>
+                    </div>
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-blue-800">4. Rotate</div>
+                        <p class="text-blue-700 text-xs mt-1">Shown recommendations are tracked for 24hr cooldown</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Types Breakdown -->
+            {% if activity_breakdown %}
+            <div class="mb-6">
+                <h3 class="font-medium text-gray-900 mb-3">Activity Types Collected</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {% for activity in activity_breakdown %}
+                    <div class="border rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-gray-900">{{ activity.count }}</div>
+                        <div class="text-xs text-gray-500 mt-1">{{ activity.activity_type | replace('_', ' ') | title }}</div>
+                        <div class="mt-2 text-xs">
+                            {% if activity.activity_type == 'tool_search' %}
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">→ searches</span>
+                            {% elif activity.activity_type == 'tool_view' %}
+                            <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">→ viewed tools</span>
+                            {% elif activity.activity_type == 'tool_finder' or activity.activity_type == 'browse' %}
+                            <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded">→ clusters</span>
+                            {% elif activity.activity_type == 'recommendation_shown' %}
+                            <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">→ rotation</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded">tracked</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Users with Activity Data -->
+            {% if user_activity_details %}
+            <div class="mb-6">
+                <h3 class="font-medium text-gray-900 mb-3">Users with Activity Data (Top 10)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profile</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activities</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Signals Extracted</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recs Served</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for u in user_activity_details %}
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <div class="text-sm font-medium text-gray-900">{{ u.display_name or u.email }}</div>
+                                    <div class="text-xs text-gray-500">{{ u.email }}</div>
+                                </td>
+                                <td class="px-4 py-3 text-xs text-gray-500">
+                                    {% if u.ai_experience_level %}
+                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded mr-1">{{ u.ai_experience_level }}</span>
+                                    {% endif %}
+                                    {% if u.budget %}
+                                    <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded mr-1">{{ u.budget }}</span>
+                                    {% endif %}
+                                    {% if u.data_sensitivity %}
+                                    <span class="px-2 py-0.5 bg-purple-50 text-purple-700 rounded">{{ u.data_sensitivity }}</span>
+                                    {% endif %}
+                                    {% if not u.ai_experience_level and not u.budget and not u.data_sensitivity %}
+                                    <span class="text-gray-400 italic">No profile set</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-lg font-bold text-gray-900">{{ u.activity_count }}</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="space-y-1 text-xs">
+                                        {% if u.searched_queries %}
+                                        <div>
+                                            <span class="text-gray-500">Searches:</span>
+                                            {% for q in u.searched_queries[:3] %}
+                                            <span class="ml-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">{{ q | truncate(15) }}</span>
+                                            {% endfor %}
+                                            {% if u.searched_queries | length > 3 %}
+                                            <span class="text-gray-400">+{{ u.searched_queries | length - 3 }} more</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        {% if u.browsed_clusters %}
+                                        <div>
+                                            <span class="text-gray-500">Clusters:</span>
+                                            {% for c in u.browsed_clusters[:3] %}
+                                            <span class="ml-1 px-1.5 py-0.5 bg-green-50 text-green-700 rounded">{{ c | truncate(15) }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% if u.viewed_tools %}
+                                        <div>
+                                            <span class="text-gray-500">Tools:</span>
+                                            {% for t in u.viewed_tools[:3] %}
+                                            <span class="ml-1 px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded">{{ t | truncate(15) }}</span>
+                                            {% endfor %}
+                                            {% if u.viewed_tools | length > 3 %}
+                                            <span class="text-gray-400">+{{ u.viewed_tools | length - 3 }} more</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        {% if not u.searched_queries and not u.browsed_clusters and not u.viewed_tools %}
+                                        <span class="text-gray-400 italic">No signals yet</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-lg font-bold {% if u.recommendations_served > 0 %}text-green-600{% else %}text-gray-400{% endif %}">
+                                        {{ u.recommendations_served }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="mb-6 p-8 text-center bg-gray-50 rounded-lg">
+                <p class="text-gray-500">No user activity data yet. Activity will appear here as users browse and search the toolkit.</p>
+            </div>
+            {% endif %}
+
+            <!-- Recent Activity Log -->
+            {% if recent_activities %}
+            <div>
+                <h3 class="font-medium text-gray-900 mb-3">Recent Activity Log (Last 20)</h3>
+                <div class="border rounded-lg overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100 text-sm">
+                            {% for activity, activity_user in recent_activities %}
+                            <tr>
+                                <td class="px-4 py-2 text-xs text-gray-500">
+                                    {{ activity.created_at.strftime('%b %d, %H:%M') }}
+                                </td>
+                                <td class="px-4 py-2 text-gray-700">
+                                    {{ activity_user.display_name or activity_user.email }}
+                                </td>
+                                <td class="px-4 py-2">
+                                    <span class="px-2 py-0.5 text-xs rounded
+                                        {% if activity.activity_type == 'tool_search' %}bg-blue-100 text-blue-700
+                                        {% elif activity.activity_type == 'tool_view' %}bg-purple-100 text-purple-700
+                                        {% elif activity.activity_type == 'tool_finder' %}bg-green-100 text-green-700
+                                        {% elif activity.activity_type == 'browse' %}bg-yellow-100 text-yellow-700
+                                        {% elif activity.activity_type == 'recommendation_shown' %}bg-indigo-100 text-indigo-700
+                                        {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                        {{ activity.activity_type | replace('_', ' ') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-xs text-gray-600">
+                                    {% if activity.query %}
+                                    <span class="font-medium">Query:</span> "{{ activity.query | truncate(30) }}"
+                                    {% endif %}
+                                    {% if activity.details %}
+                                        {% if activity.details.get('tool_slug') %}
+                                        <span class="font-medium">Tool:</span> {{ activity.details.tool_slug }}
+                                        {% elif activity.details.get('need') %}
+                                        <span class="font-medium">Need:</span> {{ activity.details.need }}
+                                        {% elif activity.details.get('cluster') %}
+                                        <span class="font-medium">Cluster:</span> {{ activity.details.cluster }}
+                                        {% elif activity.details.get('tool_slugs') %}
+                                        <span class="font-medium">Showed:</span> {{ activity.details.tool_slugs | length }} recommendations
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -132,6 +343,184 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Strategy Generation Section -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Strategy Generation → Output</h2>
+            <p class="text-sm text-gray-600">How user profile and activity data is used to generate personalized AI strategies.</p>
+        </div>
+        <div class="p-6">
+            <!-- How Strategy Uses Data -->
+            <div class="mb-6 bg-purple-50 rounded-lg p-4">
+                <h3 class="font-medium text-purple-900 mb-2">How Profile & Activity Influences Strategy Output</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-purple-800">Profile → RAG Search</div>
+                        <ul class="text-purple-700 text-xs mt-1 space-y-0.5">
+                            <li>• Use Cases → targeted tool search</li>
+                            <li>• Risk Level → security content</li>
+                            <li>• Data Sensitivity → privacy content</li>
+                            <li>• Deployment → cloud/sovereign docs</li>
+                            <li>• Org Type → org-specific content</li>
+                        </ul>
+                        <div class="mt-2 text-xs text-yellow-700 bg-yellow-50 p-1 rounded">
+                            If empty: generic search only
+                        </div>
+                    </div>
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-purple-800">Profile → LLM Prompt</div>
+                        <ul class="text-purple-700 text-xs mt-1 space-y-0.5">
+                            <li>• Role <span class="text-gray-400">(default: journalist)</span></li>
+                            <li>• Org Type <span class="text-gray-400">(default: newsroom)</span></li>
+                            <li>• Risk Level <span class="text-gray-400">(default: moderate)</span></li>
+                            <li>• Data Sensitivity <span class="text-gray-400">(default: standard)</span></li>
+                            <li>• Budget <span class="text-gray-400">(default: limited)</span></li>
+                        </ul>
+                        <div class="mt-2 text-xs text-yellow-700 bg-yellow-50 p-1 rounded">
+                            Defaults used if profile empty
+                        </div>
+                    </div>
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-purple-800">Activity Data (Optional)</div>
+                        <ul class="text-purple-700 text-xs mt-1 space-y-0.5">
+                            <li>• Tool searches → added to prompt</li>
+                            <li>• Tool Finder needs → use case hints</li>
+                            <li>• Browsed sections → topic interest</li>
+                        </ul>
+                        <div class="mt-2 text-xs text-blue-700 bg-blue-50 p-1 rounded">
+                            User must check "Include activity"
+                        </div>
+                    </div>
+                    <div class="bg-white rounded p-3">
+                        <div class="font-semibold text-purple-800">RAG → LLM Context</div>
+                        <ul class="text-purple-700 text-xs mt-1 space-y-0.5">
+                            <li>• Search queries from profile</li>
+                            <li>• Top 10 chunks retrieved</li>
+                            <li>• Chunks become LLM context</li>
+                            <li>• Citations tracked</li>
+                        </ul>
+                        <div class="mt-2 text-xs text-green-700 bg-green-50 p-1 rounded">
+                            Better profile = better retrieval
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="border rounded-lg p-4 text-center">
+                    <div class="text-3xl font-bold text-gray-900">{{ total_strategies }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Total Strategies</div>
+                </div>
+                <div class="border rounded-lg p-4 text-center">
+                    <div class="text-3xl font-bold {% if strategies_with_full_profile > 0 %}text-green-600{% else %}text-gray-400{% endif %}">{{ strategies_with_full_profile }}</div>
+                    <div class="text-xs text-gray-500 mt-1">With Full Profile (last 10)</div>
+                </div>
+                <div class="border rounded-lg p-4 text-center">
+                    <div class="text-3xl font-bold {% if strategies_with_activity > 0 %}text-blue-600{% else %}text-gray-400{% endif %}">{{ strategies_with_activity }}</div>
+                    <div class="text-xs text-gray-500 mt-1">With Activity Data (last 10)</div>
+                </div>
+                <div class="border rounded-lg p-4 text-center">
+                    <div class="text-3xl font-bold text-purple-600">{{ strategies_by_user | length }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Users Generated</div>
+                </div>
+            </div>
+
+            <!-- Recent Strategies Table -->
+            {% if strategy_details %}
+            <div class="mb-6">
+                <h3 class="font-medium text-gray-900 mb-3">Recent Strategies Generated (Last 10)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Profile Data Used</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activity Included</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Citations</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for s in strategy_details %}
+                            <tr>
+                                <td class="px-4 py-3 text-xs text-gray-500">
+                                    {{ s.created_at.strftime('%b %d, %H:%M') }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-sm text-gray-900">{{ s.user_display_name or s.user_email }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-1">
+                                        {% if s.populated_count == 0 %}
+                                        <span class="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded">No profile data → used defaults</span>
+                                        {% else %}
+                                        {% for field in s.populated_fields %}
+                                        <span class="px-1.5 py-0.5 text-xs bg-green-50 text-green-700 rounded">{{ field }}</span>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        <span class="font-medium">Used:</span>
+                                        {{ s.inputs.get('role') or 'journalist' }} @ {{ s.inputs.get('org_type') or 'newsroom' }}
+                                        {% if s.populated_count == 0 %}
+                                        <span class="text-yellow-600">(defaults)</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if s.populated_count > 0 %}
+                                    <div class="text-xs text-gray-400 mt-0.5">
+                                        Risk: {{ s.inputs.get('risk_level') or 'moderate' }},
+                                        Data: {{ s.inputs.get('data_sensitivity') or 'standard' }},
+                                        Budget: {{ s.inputs.get('budget') or 'limited' }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if s.has_activity %}
+                                    <span class="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">Yes</span>
+                                    {% if s.activity_searches %}
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        Searches: {{ s.activity_searches | join(', ') | truncate(30) }}
+                                    </div>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="px-2 py-0.5 text-xs bg-gray-100 text-gray-500 rounded">No</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-sm font-medium {% if s.citations_count > 0 %}text-green-600{% else %}text-gray-400{% endif %}">
+                                        {{ s.citations_count }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="mb-6 p-8 text-center bg-gray-50 rounded-lg">
+                <p class="text-gray-500">No strategies generated yet. Users can generate strategies from the Strategy page.</p>
+            </div>
+            {% endif %}
+
+            <!-- Users Who Generated Strategies -->
+            {% if strategies_by_user %}
+            <div>
+                <h3 class="font-medium text-gray-900 mb-3">Users Who Generated Strategies</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {% for u in strategies_by_user %}
+                    <div class="border rounded-lg p-3 text-center">
+                        <div class="text-lg font-bold text-gray-900">{{ u.strategy_count }}</div>
+                        <div class="text-xs text-gray-500 truncate" title="{{ u.email }}">{{ u.display_name or u.email }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 

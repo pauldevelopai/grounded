@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Playbook for {{ tool.name }}{% endblock %}
+{% block title %}Use Case for {{ tool.name }}{% endblock %}
 
 {% block content %}
         <!-- Breadcrumb -->
@@ -9,7 +9,7 @@
             <span class="text-gray-400 mx-2">/</span>
             <a href="/admin/discovery/tools/{{ tool.id }}" class="text-blue-600 hover:underline">{{ tool.name }}</a>
             <span class="text-gray-400 mx-2">/</span>
-            <span class="text-gray-600">Playbook</span>
+            <span class="text-gray-600">Use Case</span>
         </div>
 
         <!-- Tool Info Header -->
@@ -27,7 +27,7 @@
                 <div class="flex gap-2">
                     {% if playbook %}
                     <a href="/admin/playbooks/{{ playbook.id }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        View Playbook
+                        View Use Case
                     </a>
                     {% endif %}
                 </div>
@@ -35,12 +35,12 @@
         </div>
 
         {% if not playbook %}
-        <!-- No Playbook Yet -->
+        <!-- No Use Case Yet -->
         <div class="bg-white rounded-lg shadow p-8 text-center">
-            <h2 class="text-xl font-semibold text-gray-900 mb-2">No Playbook Generated Yet</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">No Use Case Generated Yet</h2>
             <p class="text-gray-600 mb-6 max-w-lg mx-auto">
-                Generate a newsroom playbook by scraping this tool's website and extracting implementation guidance.
-                The playbook will be grounded in real content from the tool's documentation, help pages, and blog posts.
+                Generate a use case guide by scraping this tool's website and extracting implementation guidance.
+                The use case will be grounded in real content from the tool's documentation, help pages, and blog posts.
             </p>
 
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-lg mx-auto text-left">
@@ -54,8 +54,8 @@
                 </ul>
             </div>
 
-            <button onclick="generatePlaybook()" id="generateBtn" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium">
-                Generate Playbook
+            <button onclick="generateUse Case()" id="generateBtn" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium">
+                Generate Use Case
             </button>
 
             <div id="generateStatus" class="mt-4 hidden">
@@ -64,17 +64,17 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Scraping sources and generating playbook...
+                    Scraping sources and generating use case...
                 </div>
             </div>
         </div>
 
         {% else %}
-        <!-- Playbook Exists -->
+        <!-- Use Case Exists -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Main Content -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Playbook Status -->
+                <!-- Use Case Status -->
                 <div class="bg-white rounded-lg shadow p-4 flex justify-between items-center">
                     <div class="flex items-center gap-3">
                         <span class="text-sm text-gray-600">Status:</span>
@@ -88,7 +88,7 @@
                     </div>
                     <div class="flex gap-2">
                         <a href="/admin/playbooks/{{ playbook.id }}/edit" class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">Edit</a>
-                        <button onclick="regeneratePlaybook()" class="px-3 py-1 text-sm border border-orange-300 text-orange-700 rounded hover:bg-orange-50">Regenerate</button>
+                        <button onclick="regenerateUse Case()" class="px-3 py-1 text-sm border border-orange-300 text-orange-700 rounded hover:bg-orange-50">Regenerate</button>
                     </div>
                 </div>
 
@@ -233,7 +233,7 @@
         {% endif %}
 
     <script>
-        async function generatePlaybook() {
+        async function generateUse Case() {
             const btn = document.getElementById('generateBtn');
             const status = document.getElementById('generateStatus');
 
@@ -251,7 +251,7 @@
                     window.location.href = '/admin/playbooks/' + data.playbook_id;
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.detail || 'Failed to generate playbook'));
+                    alert('Error: ' + (error.detail || 'Failed to generate use case'));
                     btn.disabled = false;
                     btn.classList.remove('opacity-50', 'cursor-not-allowed');
                     status.classList.add('hidden');
@@ -264,8 +264,8 @@
             }
         }
 
-        async function regeneratePlaybook() {
-            if (!confirm('This will regenerate the playbook from scraped sources. Existing content will be replaced. Continue?')) {
+        async function regenerateUse Case() {
+            if (!confirm('This will regenerate the use case from scraped sources. Existing content will be replaced. Continue?')) {
                 return;
             }
 
@@ -278,7 +278,7 @@
                     window.location.reload();
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.detail || 'Failed to regenerate playbook'));
+                    alert('Error: ' + (error.detail || 'Failed to regenerate use case'));
                 }
             } catch (e) {
                 alert('Error: ' + e.message);

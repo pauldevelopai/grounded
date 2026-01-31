@@ -1,16 +1,16 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Newsroom Playbooks{% endblock %}
+{% block title %}Use Cases{% endblock %}
 
 {% block content %}
         <!-- Page Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Newsroom Playbooks</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Use Cases</h1>
                 <p class="text-gray-600 mt-1">Implementation guides extracted from real sources</p>
             </div>
             <div class="flex items-center gap-4">
-                <span class="text-sm text-gray-600">{{ total }} playbooks</span>
+                <span class="text-sm text-gray-600">{{ total }} use cases</span>
             </div>
         </div>
 
@@ -128,7 +128,7 @@
                         {% else %}
                         <tr>
                             <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                No playbooks found. Generate playbooks from the <a href="/admin/discovery/tools" class="text-blue-600 hover:underline">discovered tools</a> page.
+                                No use cases found. Generate use cases from the <a href="/admin/discovery/tools" class="text-blue-600 hover:underline">discovered tools</a> page.
                             </td>
                         </tr>
                         {% endfor %}
