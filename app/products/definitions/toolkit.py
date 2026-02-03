@@ -4,7 +4,8 @@ AI Toolkit Product Definition.
 This is the primary product in the system. It defines:
 - AI Toolkit product configuration
 - Toolkit V1 (sealed, historical edition)
-- Toolkit V2 (current, active edition)
+- Toolkit V2 (sealed, historical edition)
+- Toolkit V3 (current, active edition) - AWS Lightsail deployment
 """
 
 from datetime import datetime
@@ -178,10 +179,13 @@ TOOLKIT_V1_EDITION = Edition(
 
 
 # -----------------------------------------------------------------------------
-# TOOLKIT V2 - Current Active Edition
+# TOOLKIT V2 - Sealed Historical Edition
 # -----------------------------------------------------------------------------
-# This is the current working version with ALL features enabled.
-# It is not sealed and continues to receive updates.
+# V2 represented full feature set before Lightsail migration.
+# It is now sealed and serves as a historical reference.
+#
+# IMPORTANT: V2 is SEALED. Do not add new features to this edition.
+# Any new features should only be added to V3 or later editions.
 
 TOOLKIT_V2_FEATURES = FeatureFlags(
     # =========================================================================
@@ -236,16 +240,95 @@ TOOLKIT_V2_EDITION = Edition(
     version="v2",
     display_name="Toolkit V2",
     feature_flags=TOOLKIT_V2_FEATURES,
+    is_sealed=True,
+    is_active=False,
+    sealed_at=datetime(2026, 2, 3, 0, 0, 0),
+    sealed_reason="V2 finalized before V3 Lightsail deployment",
+    git_reference="9cdb9e8261a9061e07e927db6a745a8967f7edf4",
+    created_at=datetime(2025, 1, 1, 0, 0, 0),
+    description=(
+        "Full feature set version of AI Toolkit including "
+        "discovery pipeline, strategy builder, playbooks, recommendations, "
+        "and user reviews. Sealed before AWS Lightsail migration."
+    ),
+)
+
+
+# -----------------------------------------------------------------------------
+# TOOLKIT V3 - Current Active Edition (AWS Lightsail)
+# -----------------------------------------------------------------------------
+# This is the current working version deployed on AWS Lightsail.
+# It is not sealed and continues to receive updates.
+#
+# Lightsail Instance: GROUNDED
+# Region: eu-west-2 (London, Zone A)
+# Public IPv4: 3.10.224.68
+# Public IPv6: 2a05:d01c:39:4900:1f55:672a:3ac7:c465
+
+TOOLKIT_V3_FEATURES = FeatureFlags(
+    # =========================================================================
+    # CORE FEATURES - All enabled
+    # =========================================================================
+    rag_enabled=True,
+    discovery_enabled=True,
+
+    # =========================================================================
+    # TOOL FEATURES - All enabled
+    # =========================================================================
+    clusters_enabled=True,
+    tool_finder_enabled=True,
+    cdi_scores_enabled=True,
+    advanced_search_enabled=True,
+
+    # =========================================================================
+    # LEARNING CONTENT - All enabled
+    # =========================================================================
+    foundations_enabled=True,
+    playbooks_enabled=True,
+
+    # =========================================================================
+    # PERSONALIZATION - All enabled
+    # =========================================================================
+    strategy_enabled=True,
+    recommendations_enabled=True,
+    reviews_enabled=True,
+    review_voting_enabled=True,
+    activity_history_enabled=True,
+
+    # =========================================================================
+    # CONTENT ACCESS - All enabled
+    # =========================================================================
+    browse_enabled=True,
+    sources_enabled=True,
+
+    # =========================================================================
+    # ADMINISTRATION - All enabled
+    # =========================================================================
+    admin_dashboard_enabled=True,
+    admin_ingestion_enabled=True,
+    admin_users_enabled=True,
+    admin_analytics_enabled=True,
+    admin_feedback_enabled=True,
+    admin_playbooks_enabled=True,
+    admin_discovery_enabled=True,
+)
+
+TOOLKIT_V3_EDITION = Edition(
+    product_id="ai_toolkit",
+    version="v3",
+    display_name="Toolkit V3",
+    feature_flags=TOOLKIT_V3_FEATURES,
     is_sealed=False,
     is_active=True,
     sealed_at=None,
     sealed_reason=None,
     git_reference=None,  # Not sealed, no fixed reference
-    created_at=datetime(2025, 1, 1, 0, 0, 0),
+    created_at=datetime(2026, 2, 3, 0, 0, 0),
     description=(
-        "Current version of AI Toolkit with full feature set including "
+        "Current version of AI Toolkit deployed on AWS Lightsail (London). "
+        "Full feature set with production infrastructure including "
         "discovery pipeline, strategy builder, playbooks, recommendations, "
-        "and user reviews. This is the active development version."
+        "and user reviews."
     ),
 )
 
@@ -263,6 +346,7 @@ def register_toolkit() -> None:
     # Register the product first
     ProductRegistry.register(AI_TOOLKIT_PRODUCT)
 
-    # Register editions (V1 sealed, then V2 active)
+    # Register editions (V1, V2 sealed, then V3 active)
     EditionRegistry.register(TOOLKIT_V1_EDITION)
     EditionRegistry.register(TOOLKIT_V2_EDITION)
+    EditionRegistry.register(TOOLKIT_V3_EDITION)

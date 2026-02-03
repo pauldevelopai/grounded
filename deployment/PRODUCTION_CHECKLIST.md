@@ -1,12 +1,34 @@
 # Production Validation Checklist
 
-Use this checklist to verify ToolkitRAG is properly deployed and fully functional.
+Use this checklist to verify Grounded is properly deployed and fully functional.
+
+## Current Production Server (AWS Lightsail)
+
+| Setting | Value |
+|---------|-------|
+| **Instance Name** | GROUNDED |
+| **OS** | Ubuntu |
+| **Region** | eu-west-2 (London, Zone A) |
+| **Instance Type** | General purpose |
+| **Network** | Dual-stack |
+| **Public IPv4** | 3.10.224.68 |
+| **Private IPv4** | 172.26.10.236 |
+| **Public IPv6** | 2a05:d01c:39:4900:1f55:672a:3ac7:c465 |
+| **Username** | ubuntu |
+| **SSH Key** | Default key for eu-west-2 |
+
+### Quick SSH Access
+```bash
+ssh ubuntu@3.10.224.68
+```
+
+---
 
 ## Pre-Deployment Checklist
 
 ### Server Setup
-- [ ] VPS created (AWS Lightsail, DigitalOcean, Linode, or Vultr)
-- [ ] Static IP assigned
+- [x] VPS created (AWS Lightsail - GROUNDED instance)
+- [x] Static IP assigned (3.10.224.68)
 - [ ] DNS A record configured pointing to server IP
 - [ ] Non-root user created (`deployer`)
 - [ ] SSH key authentication configured
@@ -30,25 +52,25 @@ Use this checklist to verify ToolkitRAG is properly deployed and fully functiona
 - [ ] Connection tested with `psql`
 
 ### Application
-- [ ] Repository cloned to `/opt/toolkitrag/app`
+- [ ] Repository cloned to `/opt/grounded/app`
 - [ ] Virtual environment created with Python 3.11
 - [ ] Dependencies installed from requirements.txt
-- [ ] `.env` file created at `/etc/toolkitrag/.env`
+- [ ] `.env` file created at `/etc/grounded/.env`
 - [ ] `.env` permissions set to 640
 - [ ] Environment variables configured (see below)
 - [ ] SECRET_KEY generated (32+ characters)
 - [ ] CSRF_SECRET_KEY generated (32+ characters)
 - [ ] Database migrations run (`alembic upgrade head`)
-- [ ] Upload directory created (`/opt/toolkitrag/data/uploads`)
-- [ ] Log directory created (`/var/log/toolkitrag`)
+- [ ] Upload directory created (`/opt/grounded/data/uploads`)
+- [ ] Log directory created (`/var/log/grounded`)
 - [ ] Permissions set correctly (deployer:deployer)
 
 ### Systemd Service
-- [ ] Service file copied to `/etc/systemd/system/toolkitrag.service`
-- [ ] Service enabled (`systemctl enable toolkitrag`)
-- [ ] Service started (`systemctl start toolkitrag`)
-- [ ] Service status is active (`systemctl status toolkitrag`)
-- [ ] No errors in service logs (`journalctl -u toolkitrag`)
+- [ ] Service file copied to `/etc/systemd/system/grounded.service`
+- [ ] Service enabled (`systemctl enable grounded`)
+- [ ] Service started (`systemctl start grounded`)
+- [ ] Service status is active (`systemctl status grounded`)
+- [ ] No errors in service logs (`journalctl -u grounded`)
 
 ### Reverse Proxy
 - [ ] Caddy or Nginx configured
@@ -68,7 +90,7 @@ Use this checklist to verify ToolkitRAG is properly deployed and fully functiona
 - [ ] fail2ban configured for SSH
 
 ### Backups
-- [ ] Backup directory created (`/opt/toolkitrag/backups`)
+- [ ] Backup directory created (`/opt/grounded/backups`)
 - [ ] Database backup script installed
 - [ ] File backup script installed
 - [ ] Backup scripts executable
@@ -77,8 +99,8 @@ Use this checklist to verify ToolkitRAG is properly deployed and fully functiona
 - [ ] Restore procedure tested
 
 ### Logging
-- [ ] Application logs to `/var/log/toolkitrag/app.log`
-- [ ] Log rotation configured (`/etc/logrotate.d/toolkitrag`)
+- [ ] Application logs to `/var/log/grounded/app.log`
+- [ ] Log rotation configured (`/etc/logrotate.d/grounded`)
 - [ ] Logs are JSON formatted (production)
 - [ ] No errors in recent logs
 
@@ -86,7 +108,7 @@ Use this checklist to verify ToolkitRAG is properly deployed and fully functiona
 
 ## Environment Variables Checklist
 
-Verify all required environment variables are set in `/etc/toolkitrag/.env`:
+Verify all required environment variables are set in `/etc/grounded/.env`:
 
 ### Critical Settings
 - [ ] `ENV=prod`
@@ -104,7 +126,7 @@ Verify all required environment variables are set in `/etc/toolkitrag/.env`:
 ### Logging Settings
 - [ ] `LOG_LEVEL=INFO`
 - [ ] `LOG_FORMAT=json`
-- [ ] `LOG_FILE=/var/log/toolkitrag/app.log`
+- [ ] `LOG_FILE=/var/log/grounded/app.log`
 
 ### NOT Set (Security)
 - [ ] `ADMIN_PASSWORD` is NOT set (or commented out)
@@ -116,7 +138,7 @@ Verify all required environment variables are set in `/etc/toolkitrag/.env`:
 ### 1. Health Checks
 Run automated validation script:
 ```bash
-cd /opt/toolkitrag/app
+cd /opt/grounded/app
 ./deployment/validate-production.sh yourdomain.com
 ```
 
@@ -341,15 +363,15 @@ ab -n 100 -c 10 https://yourdomain.com/health
 
 **Test Database Backup**:
 ```bash
-/opt/toolkitrag/deployment/backup-database.sh
+/opt/grounded/deployment/backup-database.sh
 ```
 - [ ] Backup completes successfully
-- [ ] Backup file created in `/opt/toolkitrag/backups`
+- [ ] Backup file created in `/opt/grounded/backups`
 - [ ] Backup file is gzipped SQL
 
 **Test File Backup**:
 ```bash
-/opt/toolkitrag/deployment/backup-files.sh
+/opt/grounded/deployment/backup-files.sh
 ```
 - [ ] Backup completes successfully
 - [ ] Backup file created
@@ -361,7 +383,7 @@ ab -n 100 -c 10 https://yourdomain.com/health
 ./deployment/restore.sh
 
 # Test database restore
-./deployment/restore.sh database /opt/toolkitrag/backups/toolkitrag_YYYYMMDD_HHMMSS.sql.gz
+./deployment/restore.sh database /opt/grounded/backups/grounded_YYYYMMDD_HHMMSS.sql.gz
 ```
 - [ ] Restore completes successfully
 - [ ] Application restarts
@@ -371,7 +393,7 @@ ab -n 100 -c 10 https://yourdomain.com/health
 
 **Check Application Logs**:
 ```bash
-tail -f /var/log/toolkitrag/app.log | jq .
+tail -f /var/log/grounded/app.log | jq .
 ```
 - [ ] Logs are in JSON format
 - [ ] Each request has unique `request_id`
@@ -380,7 +402,7 @@ tail -f /var/log/toolkitrag/app.log | jq .
 
 **Check System Logs**:
 ```bash
-sudo journalctl -u toolkitrag -f
+sudo journalctl -u grounded -f
 ```
 - [ ] Service is active
 - [ ] No error messages
@@ -391,8 +413,8 @@ sudo journalctl -u toolkitrag -f
 sudo journalctl -u caddy -f
 
 # Or Nginx
-sudo tail -f /var/log/nginx/toolkitrag.access.log
-sudo tail -f /var/log/nginx/toolkitrag.error.log
+sudo tail -f /var/log/nginx/grounded.access.log
+sudo tail -f /var/log/nginx/grounded.error.log
 ```
 - [ ] Requests are being proxied
 - [ ] HTTPS is working
@@ -430,10 +452,10 @@ sudo tail -f /var/log/nginx/toolkitrag.error.log
 ### Application Won't Start
 ```bash
 # Check logs
-sudo journalctl -u toolkitrag -n 100 --no-pager
+sudo journalctl -u grounded -n 100 --no-pager
 
 # Test manually
-cd /opt/toolkitrag/app
+cd /opt/grounded/app
 source venv/bin/activate
 python -m uvicorn app.main:app --reload
 ```
@@ -464,14 +486,14 @@ sudo journalctl -u caddy -n 50
 ### Rate Limits Too Strict
 ```bash
 # Edit .env
-sudo nano /etc/toolkitrag/.env
+sudo nano /etc/grounded/.env
 
 # Increase limits
 RATE_LIMIT_AUTH_REQUESTS=10
 RATE_LIMIT_RAG_REQUESTS=50
 
 # Restart
-sudo systemctl restart toolkitrag
+sudo systemctl restart grounded
 ```
 
 ---
@@ -493,12 +515,13 @@ sudo systemctl restart toolkitrag
 ## Support
 
 For issues or questions:
-1. Check logs: `sudo journalctl -u toolkitrag -f`
+1. Check logs: `sudo journalctl -u grounded -f`
 2. Review deployment guide: `DEPLOY.md`
 3. Run validation script: `./deployment/validate-production.sh`
 4. Consult troubleshooting section above
 
 ---
 
-**Deployment Checklist Version**: 1.0
-**Last Updated**: 2026-01-23
+**Deployment Checklist Version**: 3.0
+**Last Updated**: 2026-02-03
+**Edition**: V3 (AWS Lightsail)

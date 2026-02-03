@@ -1,5 +1,5 @@
 [Unit]
-Description=ToolkitRAG FastAPI Application
+Description=Grounded FastAPI Application (V3 - AWS Lightsail)
 After=network.target postgresql.service
 Wants=postgresql.service
 
@@ -7,14 +7,14 @@ Wants=postgresql.service
 Type=notify
 User=deployer
 Group=deployer
-WorkingDirectory=/opt/toolkitrag/app
+WorkingDirectory=/opt/grounded/app
 
 # Environment
-Environment="PATH=/opt/toolkitrag/app/venv/bin:/usr/local/bin:/usr/bin:/bin"
-EnvironmentFile=/etc/toolkitrag/.env
+Environment="PATH=/opt/grounded/app/venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/etc/grounded/.env
 
 # Start command with Uvicorn
-ExecStart=/opt/toolkitrag/app/venv/bin/uvicorn app.main:app \
+ExecStart=/opt/grounded/app/venv/bin/uvicorn app.main:app \
     --host 127.0.0.1 \
     --port 8000 \
     --workers 4 \
@@ -23,7 +23,7 @@ ExecStart=/opt/toolkitrag/app/venv/bin/uvicorn app.main:app \
     --use-colors
 
 # Alternative: Use Gunicorn with Uvicorn workers
-# ExecStart=/opt/toolkitrag/app/venv/bin/gunicorn app.main:app \
+# ExecStart=/opt/grounded/app/venv/bin/gunicorn app.main:app \
 #     --bind 127.0.0.1:8000 \
 #     --workers 4 \
 #     --worker-class uvicorn.workers.UvicornWorker \
@@ -42,7 +42,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/toolkitrag/data /var/log/toolkitrag
+ReadWritePaths=/opt/grounded/data /var/log/grounded
 
 # Resource limits
 LimitNOFILE=65536
@@ -52,7 +52,7 @@ TimeoutStopSec=30
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=toolkitrag
+SyslogIdentifier=grounded
 
 [Install]
 WantedBy=multi-user.target
