@@ -290,9 +290,27 @@ class GitHubAwesomeListSource(BaseDiscoverySource):
 
         Config options:
             lists: list[tuple[str, str|None]] - List of (repo, path) tuples
+            custom_urls: list[str] - Additional GitHub repo URLs to scrape
+            max_per_list: int - Max tools per list (default: no limit)
         """
         config = config or {}
-        lists = config.get("lists", self.AWESOME_LISTS)
+        lists = list(config.get("lists", self.AWESOME_LISTS))
+        max_per_list = config.get("max_per_list")
+
+        # Parse custom URLs and add to lists
+        custom_urls = config.get("custom_urls", [])
+        for url in custom_urls:
+            if url and "github.com" in url:
+                # Extract repo from URL: https://github.com/owner/repo
+                import re
+                match = re.search(r'github\.com/([^/]+/[^/]+)', url.strip())
+                if match:
+                    repo = match.group(1).rstrip('/')
+                    # Remove .git suffix if present
+                    if repo.endswith('.git'):
+                        repo = repo[:-4]
+                    lists.append((repo, None))
+                    logger.info(f"Added custom awesome list: {repo}")
 
         tools: list[RawToolData] = []
         seen_urls: set[str] = set()
@@ -301,10 +319,17 @@ class GitHubAwesomeListSource(BaseDiscoverySource):
             for repo, path in lists:
                 try:
                     list_tools = await self._parse_awesome_list(client, repo, path)
+                    added_from_list = 0
                     for tool in list_tools:
+                        # Check max_per_list limit
+                        if max_per_list and added_from_list >= max_per_list:
+                            logger.info(f"Reached max_per_list ({max_per_list}) for {repo}")
+                            break
+
                         if tool.url not in seen_urls:
                             seen_urls.add(tool.url)
                             tools.append(tool)
+                            added_from_list += 1
 
                     # Rate limit
                     await asyncio.sleep(1)

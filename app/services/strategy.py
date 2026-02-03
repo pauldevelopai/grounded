@@ -1,5 +1,6 @@
 """Strategy plan generation service."""
-from typing import Dict, List, Any
+import logging
+from typing import Dict, List, Any, Optional
 from sqlalchemy.orm import Session
 from openai import OpenAI
 
@@ -8,6 +9,48 @@ from app.models.auth import User  # noqa: F401
 from app.models.toolkit import StrategyPlan
 from app.services.rag import search_similar_chunks
 from app.settings import settings
+
+logger = logging.getLogger(__name__)
+
+
+async def generate_personalized_strategy_plan(
+    db: Session,
+    user: User,
+    inputs: Dict[str, Any]
+) -> StrategyPlan:
+    """
+    Generate a personalized strategy plan using learning profile context.
+
+    This enhanced version uses the user's learning profile to:
+    - Include their learned preferences and interests
+    - Avoid tools they've dismissed
+    - Emphasize tools they've favorited
+    - Factor in their learning style
+
+    Args:
+        db: Database session
+        user: User object (for profile access)
+        inputs: Dictionary with wizard form inputs
+
+    Returns:
+        StrategyPlan object saved to database
+    """
+    from app.services.learning_profile import get_personalized_context
+
+    # Get personalized context from learning profile
+    try:
+        personalized_context = await get_personalized_context(db, user)
+    except Exception as e:
+        logger.warning(f"Could not get personalized context: {e}")
+        personalized_context = {}
+
+    # Merge personalized context into inputs
+    enhanced_inputs = {**inputs}
+    if personalized_context:
+        enhanced_inputs["learning_profile"] = personalized_context
+
+    # Use the standard generation with enhanced inputs
+    return generate_strategy_plan(db, str(user.id), enhanced_inputs)
 
 
 def generate_strategy_plan(
@@ -149,9 +192,50 @@ RULES:
 4. Skip generic advice like "consider your needs" or "evaluate options."
 5. If the toolkit content doesn't have a good match, say so briefly.
 6. Keep sections short. Bullet points over paragraphs.
-7. Focus on the 2-3 most relevant tools, not a comprehensive list."""
+7. Focus on the 2-3 most relevant tools, not a comprehensive list.
+8. If USER PERSONALIZATION is provided, tailor recommendations to their interests and learning style.
+9. NEVER recommend tools the user has dismissed - they've already indicated they're not interested.
+10. Give extra weight to tools the user has favorited - they've shown active interest."""
 
-    # Build activity section if available
+    # Build personalization section from learning profile
+    personalization_section = ""
+    learning_profile = inputs.get('learning_profile', {})
+    if learning_profile:
+        parts = []
+
+        # Profile summary (AI-generated understanding of user)
+        if learning_profile.get('profile_summary'):
+            parts.append(f"User context: {learning_profile['profile_summary']}")
+
+        # Top interests
+        top_interests = learning_profile.get('top_interests', [])
+        if top_interests:
+            interest_names = [i['cluster'] for i in top_interests[:3]]
+            parts.append(f"Key interests: {', '.join(interest_names)}")
+
+        # Recent searches
+        recent_searches = learning_profile.get('recent_searches', [])
+        if recent_searches:
+            parts.append(f"Recent searches: {', '.join(recent_searches[:3])}")
+
+        # Learning style
+        if learning_profile.get('learning_style'):
+            parts.append(f"Learning style: {learning_profile['learning_style']}")
+
+        # Favorited tools (emphasize these)
+        favorited = learning_profile.get('favorited_tools', [])
+        if favorited:
+            parts.append(f"Favorited tools (user has shown interest): {', '.join(favorited[:5])}")
+
+        # Avoided tools (exclude these from recommendations)
+        avoided = learning_profile.get('avoided_tools', [])
+        if avoided:
+            parts.append(f"Dismissed tools (avoid recommending): {', '.join(avoided[:5])}")
+
+        if parts:
+            personalization_section = "\n\nUSER PERSONALIZATION:\n" + "\n".join(parts)
+
+    # Build activity section if available (legacy support)
     activity_section = ""
     activity_summary = inputs.get('activity_summary')
     if activity_summary:
@@ -165,6 +249,7 @@ RULES:
     use_case_text = ', '.join(use_cases) if use_cases else 'general AI adoption'
 
     user_prompt = f"""Based on this toolkit content, give practical recommendations for a {role} at a {org_type} who wants to: {use_case_text}
+{personalization_section}
 {activity_section}
 
 TOOLKIT CONTENT:

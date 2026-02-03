@@ -1,0 +1,173 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Tool Suggestions{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Tool Suggestions</h1>
+        <p class="text-gray-600 mt-1">Review and approve user-submitted tool suggestions.</p>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <a href="/admin/tool-suggestions"
+                   class="px-6 py-4 text-sm font-medium {% if not status_filter %}border-b-2 border-blue-500 text-blue-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    All ({{ total_count }})
+                </a>
+                <a href="/admin/tool-suggestions?status=pending"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'pending' %}border-b-2 border-yellow-500 text-yellow-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Pending Review
+                    {% if pending_count > 0 %}
+                    <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs">{{ pending_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="/admin/tool-suggestions?status=converted"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'converted' %}border-b-2 border-green-500 text-green-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Converted ({{ converted_count }})
+                </a>
+                <a href="/admin/tool-suggestions?status=approved"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'approved' %}border-b-2 border-green-500 text-green-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Approved ({{ approved_count }})
+                </a>
+                <a href="/admin/tool-suggestions?status=rejected"
+                   class="px-6 py-4 text-sm font-medium {% if status_filter == 'rejected' %}border-b-2 border-red-500 text-red-600{% else %}text-gray-500 hover:text-gray-700{% endif %}">
+                    Rejected ({{ rejected_count }})
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Suggestions List -->
+    {% if suggestions %}
+    <div class="space-y-4">
+        {% for suggestion in suggestions %}
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <!-- Tool Name and URL -->
+                    <h3 class="text-lg font-semibold text-gray-900">{{ suggestion.name }}</h3>
+                    <a href="{{ suggestion.url }}" target="_blank" class="text-blue-600 hover:underline text-sm break-all">
+                        {{ suggestion.url }}
+                    </a>
+
+                    <!-- Description -->
+                    {% if suggestion.description %}
+                    <div class="mt-3">
+                        <p class="text-sm text-gray-700">{{ suggestion.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Why Valuable -->
+                    {% if suggestion.why_valuable %}
+                    <div class="mt-3 p-3 bg-blue-50 rounded">
+                        <p class="text-sm text-blue-800"><strong>Why valuable:</strong> {{ suggestion.why_valuable }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Use Cases -->
+                    {% if suggestion.use_cases %}
+                    <div class="mt-3 p-3 bg-purple-50 rounded">
+                        <p class="text-sm text-purple-800"><strong>Use cases:</strong> {{ suggestion.use_cases }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submitter Info -->
+                    <div class="mt-4 text-xs text-gray-500">
+                        Submitted by {{ suggestion.submitter.email if suggestion.submitter else 'Unknown' }}
+                        on {{ suggestion.submitted_at.strftime('%b %d, %Y at %H:%M') }}
+                    </div>
+
+                    <!-- Review Notes (if already reviewed) -->
+                    {% if suggestion.status != 'pending' and suggestion.review_notes %}
+                    <div class="mt-3 p-3 {% if suggestion.status in ['approved', 'converted'] %}bg-green-50{% else %}bg-red-50{% endif %} rounded">
+                        <p class="text-sm {% if suggestion.status in ['approved', 'converted'] %}text-green-800{% else %}text-red-800{% endif %}">
+                            <strong>Review notes:</strong> {{ suggestion.review_notes }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Link to converted tool -->
+                    {% if suggestion.status == 'converted' and suggestion.converted_tool %}
+                    <div class="mt-3">
+                        <a href="/admin/discovery/tools/{{ suggestion.converted_tool.id }}" class="inline-flex items-center text-sm text-green-600 hover:text-green-700">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            View converted tool
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Status and Actions -->
+                <div class="ml-6 flex-shrink-0 text-right">
+                    {% if suggestion.status == 'pending' %}
+                    <span class="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 rounded-full">Pending</span>
+
+                    <!-- Action Forms -->
+                    <div class="mt-4 space-y-2">
+                        <form method="POST" action="/admin/tool-suggestions/{{ suggestion.id }}/approve">
+                            <input type="hidden" name="review_notes" value="Approved and added to toolkit.">
+                            <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+                                Approve & Add
+                            </button>
+                        </form>
+                        <form method="POST" action="/admin/tool-suggestions/{{ suggestion.id }}/reject">
+                            <input type="hidden" name="review_notes" value="Does not meet our inclusion criteria.">
+                            <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% elif suggestion.status == 'converted' %}
+                    <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">Converted</span>
+                    <p class="mt-2 text-xs text-gray-500">
+                        by {{ suggestion.reviewer.email if suggestion.reviewer else 'Admin' }}<br>
+                        {{ suggestion.reviewed_at.strftime('%b %d, %Y') if suggestion.reviewed_at else '' }}
+                    </p>
+                    {% elif suggestion.status == 'approved' %}
+                    <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 rounded-full">Approved</span>
+                    <p class="mt-2 text-xs text-gray-500">
+                        by {{ suggestion.reviewer.email if suggestion.reviewer else 'Admin' }}<br>
+                        {{ suggestion.reviewed_at.strftime('%b %d, %Y') if suggestion.reviewed_at else '' }}
+                    </p>
+                    {% else %}
+                    <span class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full">Rejected</span>
+                    <p class="mt-2 text-xs text-gray-500">
+                        by {{ suggestion.reviewer.email if suggestion.reviewer else 'Admin' }}<br>
+                        {{ suggestion.reviewed_at.strftime('%b %d, %Y') if suggestion.reviewed_at else '' }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No suggestions found</h3>
+        <p class="text-gray-600">
+            {% if status_filter == 'pending' %}
+            No pending suggestions to review.
+            {% elif status_filter == 'converted' %}
+            No converted suggestions yet.
+            {% elif status_filter == 'approved' %}
+            No approved suggestions yet.
+            {% elif status_filter == 'rejected' %}
+            No rejected suggestions.
+            {% else %}
+            Users haven't submitted any tool suggestions yet.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

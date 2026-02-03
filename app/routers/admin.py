@@ -1732,3 +1732,127 @@ async def clear_embeddings(
     db.commit()
 
     return RedirectResponse(url="/admin/training", status_code=303)
+
+
+# =============================================================================
+# TOOL SUGGESTIONS MANAGEMENT
+# =============================================================================
+
+@router.get("/tool-suggestions", response_class=HTMLResponse)
+async def admin_tool_suggestions(
+    request: Request,
+    status: Optional[str] = Query(None),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """List all tool suggestions for admin review."""
+    from app.models.tool_suggestion import ToolSuggestion
+
+    query = db.query(ToolSuggestion)
+
+    if status and status in ('pending', 'approved', 'rejected', 'converted'):
+        query = query.filter(ToolSuggestion.status == status)
+
+    suggestions = query.order_by(desc(ToolSuggestion.submitted_at)).all()
+
+    # Get counts by status
+    pending_count = db.query(ToolSuggestion).filter(ToolSuggestion.status == 'pending').count()
+    approved_count = db.query(ToolSuggestion).filter(ToolSuggestion.status == 'approved').count()
+    rejected_count = db.query(ToolSuggestion).filter(ToolSuggestion.status == 'rejected').count()
+    converted_count = db.query(ToolSuggestion).filter(ToolSuggestion.status == 'converted').count()
+    total_count = pending_count + approved_count + rejected_count + converted_count
+
+    admin_context = get_admin_context_dict(request)
+    return templates.TemplateResponse(
+        "admin/tool_suggestions.html",
+        {
+            "request": request,
+            "user": admin_user,
+            "suggestions": suggestions,
+            "status_filter": status or "",
+            "pending_count": pending_count,
+            "approved_count": approved_count,
+            "rejected_count": rejected_count,
+            "converted_count": converted_count,
+            "total_count": total_count,
+            **admin_context,
+            "active_admin_page": "tool_suggestions",
+        }
+    )
+
+
+@router.post("/tool-suggestions/{suggestion_id}/approve")
+async def approve_tool_suggestion(
+    suggestion_id: str,
+    review_notes: Optional[str] = Form(None),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Approve a tool suggestion and convert it to a DiscoveredTool."""
+    from app.models.tool_suggestion import ToolSuggestion
+    from app.services.discovery.dedup import extract_domain
+    from app.services.discovery.pipeline import generate_slug
+
+    suggestion = db.query(ToolSuggestion).filter(ToolSuggestion.id == suggestion_id).first()
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+
+    # Get existing slugs for uniqueness check
+    existing_slugs = {t.slug for t in db.query(DiscoveredTool.slug).all()}
+
+    # Create DiscoveredTool from suggestion
+    tool = DiscoveredTool(
+        name=suggestion.name,
+        slug=generate_slug(suggestion.name, existing_slugs),
+        url=suggestion.url,
+        url_domain=extract_domain(suggestion.url),
+        description=suggestion.description,
+        raw_description=suggestion.description,
+        purpose=suggestion.use_cases,
+        source_type="directory",  # User suggestions treated as directory
+        source_url=suggestion.url,
+        source_name="User Suggestion",
+        status="approved",  # Pre-approved since admin is approving the suggestion
+        confidence_score=1.0,  # High confidence - admin approved
+        reviewed_by=admin_user.id,
+        reviewed_at=datetime.now(timezone.utc),
+        review_notes=review_notes or f"Converted from user suggestion by {suggestion.submitter.email}",
+    )
+
+    db.add(tool)
+    db.flush()  # Get the tool ID
+
+    # Update suggestion status
+    suggestion.status = "converted"
+    suggestion.reviewed_by = admin_user.id
+    suggestion.reviewed_at = datetime.now(timezone.utc)
+    suggestion.review_notes = review_notes or "Approved and converted to tool."
+    suggestion.converted_tool_id = tool.id
+
+    db.commit()
+
+    return RedirectResponse(url="/admin/tool-suggestions?status=pending", status_code=303)
+
+
+@router.post("/tool-suggestions/{suggestion_id}/reject")
+async def reject_tool_suggestion(
+    suggestion_id: str,
+    review_notes: Optional[str] = Form(None),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Reject a tool suggestion."""
+    from app.models.tool_suggestion import ToolSuggestion
+
+    suggestion = db.query(ToolSuggestion).filter(ToolSuggestion.id == suggestion_id).first()
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+
+    suggestion.status = "rejected"
+    suggestion.reviewed_by = admin_user.id
+    suggestion.reviewed_at = datetime.now(timezone.utc)
+    suggestion.review_notes = review_notes or "Does not meet our criteria for inclusion."
+
+    db.commit()
+
+    return RedirectResponse(url="/admin/tool-suggestions?status=pending", status_code=303)

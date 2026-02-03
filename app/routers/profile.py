@@ -114,3 +114,27 @@ async def update_profile(
     logger.info(f"Profile updated for user {db_user.email}: display_name={db_user.display_name}, role={db_user.role}")
 
     return RedirectResponse(url="/profile?success=1", status_code=303)
+
+
+@router.get("/my-suggestions", response_class=HTMLResponse)
+async def my_tool_suggestions(
+    request: Request,
+    user: User = Depends(require_auth_page),
+    db: Session = Depends(get_db),
+):
+    """Show user their submitted tool suggestions."""
+    from sqlalchemy import desc
+    from app.models.tool_suggestion import ToolSuggestion
+
+    suggestions = db.query(ToolSuggestion).filter(
+        ToolSuggestion.submitted_by == user.id
+    ).order_by(desc(ToolSuggestion.submitted_at)).all()
+
+    return templates.TemplateResponse(
+        "profile/my_suggestions.html",
+        {
+            "request": request,
+            "user": user,
+            "suggestions": suggestions,
+        }
+    )

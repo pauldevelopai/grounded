@@ -8,6 +8,8 @@ from app.models.playbook import ToolPlaybook, PlaybookSource
 from app.models.resource import DiscoveredResource
 from app.models.usecase import UseCase
 from app.models.suggested_source import SuggestedSource
+from app.models.tool_suggestion import ToolSuggestion
+from app.models.learning_profile import UserLearningProfile
 
 __all__ = [
     "User",
@@ -25,4 +27,6 @@ __all__ = [
     "DiscoveredResource",
     "UseCase",
     "SuggestedSource",
+    "ToolSuggestion",
+    "UserLearningProfile",
 ]

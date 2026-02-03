@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Suggest a Tool - {{ product_name }}{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Suggest a Tool</h1>
+        <p class="mt-2 text-gray-600 max-w-2xl">
+            Know an AI tool that would be valuable for journalists?
+            Submit it here for review. Approved tools will be added to our toolkit.
+        </p>
+    </div>
+
+    <!-- Success Message -->
+    {% if success %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-green-800">Thank you! Your suggestion has been submitted for review.</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Suggestion Form -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Submit a New Tool</h2>
+
+        <form method="POST" action="/tools/suggest" class="space-y-4">
+            <!-- Tool Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                    Tool Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="name" name="name" required
+                       placeholder="e.g., Whisper AI, Otter.ai, etc."
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- URL -->
+            <div>
+                <label for="url" class="block text-sm font-medium text-gray-700 mb-1">
+                    Tool URL <span class="text-red-500">*</span>
+                </label>
+                <input type="url" id="url" name="url" required
+                       placeholder="https://example.com"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <p class="mt-1 text-xs text-gray-500">The main website or landing page for the tool.</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                </label>
+                <textarea id="description" name="description" rows="3"
+                          placeholder="What does this tool do? What problem does it solve?"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Optional: Describe what the tool does in 2-3 sentences.</p>
+            </div>
+
+            <!-- Why Valuable -->
+            <div>
+                <label for="why_valuable" class="block text-sm font-medium text-gray-700 mb-1">
+                    Why is this tool valuable for journalists?
+                </label>
+                <textarea id="why_valuable" name="why_valuable" rows="2"
+                          placeholder="e.g., It helps with transcription accuracy in noisy environments..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Optional: Help us understand why this should be included.</p>
+            </div>
+
+            <!-- Use Cases -->
+            <div>
+                <label for="use_cases" class="block text-sm font-medium text-gray-700 mb-1">
+                    How would you use this tool?
+                </label>
+                <textarea id="use_cases" name="use_cases" rows="2"
+                          placeholder="e.g., For transcribing recorded interviews, live captioning..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Optional: Describe your specific use cases.</p>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center justify-between pt-4">
+                <a href="/tools" class="text-gray-600 hover:text-gray-800">
+                    &larr; Back to Tools
+                </a>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium">
+                    Submit Suggestion
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Link to view suggestions -->
+    <div class="text-center text-sm text-gray-600">
+        <a href="/my-suggestions" class="text-blue-600 hover:underline">View your submitted suggestions</a>
+    </div>
+
+</div>
+{% endblock %}

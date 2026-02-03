@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from fastapi import APIRouter, Request, Depends, HTTPException, Header, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
@@ -26,6 +26,61 @@ from app.products.guards import require_feature
 from app.products.admin_context import get_admin_context_dict
 
 logger = logging.getLogger(__name__)
+
+
+def cleanup_stale_runs(db: Session) -> int:
+    """
+    Find and mark stale discovery runs as failed.
+
+    A run is stale if:
+    - Status is "running"
+    - Last progress update was > DISCOVERY_PROGRESS_STALE_MINUTES ago
+
+    Returns:
+        Number of runs marked as failed
+    """
+    stale_minutes = getattr(settings, 'DISCOVERY_PROGRESS_STALE_MINUTES', 5)
+    stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=stale_minutes)
+
+    stale_runs = db.query(DiscoveryRun).filter(
+        DiscoveryRun.status == "running"
+    ).all()
+
+    cleaned = 0
+    for run in stale_runs:
+        # Check last_progress_at in run_config
+        last_progress = None
+        if run.run_config and "progress" in run.run_config:
+            progress = run.run_config.get("progress", {})
+            last_progress_str = progress.get("last_progress_at")
+            if last_progress_str:
+                try:
+                    last_progress = datetime.fromisoformat(last_progress_str.replace('Z', '+00:00'))
+                    # Make timezone aware if needed
+                    if last_progress.tzinfo is None:
+                        last_progress = last_progress.replace(tzinfo=timezone.utc)
+                except (ValueError, TypeError):
+                    pass
+
+        # If no progress timestamp, use started_at
+        if last_progress is None and run.started_at:
+            last_progress = run.started_at
+            if last_progress.tzinfo is None:
+                last_progress = last_progress.replace(tzinfo=timezone.utc)
+
+        # Check if stale
+        if last_progress and last_progress < stale_threshold:
+            run.status = "failed"
+            run.error_message = f"Stale - no progress for {stale_minutes} minutes"
+            run.completed_at = datetime.now(timezone.utc)
+            cleaned += 1
+            logger.warning(f"Marked stale discovery run {run.id} as failed")
+
+    if cleaned > 0:
+        db.commit()
+
+    return cleaned
+
 
 router = APIRouter(
     prefix="/admin/discovery",
@@ -73,6 +128,7 @@ async def verify_api_key_or_admin(
 
 @router.post("/run")
 async def trigger_discovery_run(
+    request: Request,
     sources: Optional[str] = Query(None, description="Comma-separated source types"),
     user_or_key: Optional[User] = Depends(verify_api_key_or_admin),
     db: Session = Depends(get_db)
@@ -87,6 +143,18 @@ async def trigger_discovery_run(
     Query params:
         sources: Optional comma-separated source types (github, producthunt, awesome_list, directory)
 
+    Body (optional JSON):
+        {
+            "sources": ["github", "producthunt"],
+            "global_limit": 100,
+            "steps": {"fetch": true, "validate": true, "dedupe": true},
+            "github": {"min_stars": 100, "max_results_per_topic": 30},
+            "producthunt": {"min_votes": 50, "days_back": 30},
+            "awesome_list": {"max_per_list": 50},
+            "directory": {"max_per_directory": 100},
+            "custom_awesome_urls": ["https://github.com/..."]
+        }
+
     Returns immediately with run_id. Client should poll /runs/{run_id} for progress.
     """
     from app.services.discovery.pipeline import (
@@ -94,10 +162,21 @@ async def trigger_discovery_run(
         get_sources_by_type
     )
 
-    # Parse sources
+    # Try to parse JSON body for advanced config
+    run_config = {}
+    try:
+        body = await request.json()
+        if body:
+            run_config = body
+    except Exception:
+        pass  # No JSON body or invalid JSON
+
+    # Parse sources from query param or body
     source_list = None
     if sources:
         source_list = [s.strip() for s in sources.split(",") if s.strip()]
+    elif run_config.get("sources"):
+        source_list = run_config["sources"]
 
     # Determine triggered_by
     if user_or_key:
@@ -106,6 +185,11 @@ async def trigger_discovery_run(
         triggered_by = "cron"
 
     try:
+        # Clean up any stale runs first
+        stale_cleaned = cleanup_stale_runs(db)
+        if stale_cleaned > 0:
+            logger.info(f"Cleaned up {stale_cleaned} stale discovery runs")
+
         # Check if there's already a running discovery
         existing_running = db.query(DiscoveryRun).filter(
             DiscoveryRun.status == "running"
@@ -129,7 +213,7 @@ async def trigger_discovery_run(
 
         total_sources = len(discovery_sources)
 
-        # Create run record IMMEDIATELY with status "running"
+        # Build run config with progress tracking and source-specific settings
         run_config_with_progress = {
             "progress": {
                 "current_source": "Initializing...",
@@ -139,7 +223,16 @@ async def trigger_discovery_run(
                 "current_tool": None,
                 "tools_in_current_source": 0,
                 "tools_processed_in_source": 0,
-            }
+            },
+            # Pipeline configuration
+            "steps": run_config.get("steps", {"fetch": True, "validate": True, "dedupe": True}),
+            "global_limit": run_config.get("global_limit"),
+            # Source-specific configs
+            "github": run_config.get("github", {}),
+            "awesome_list": run_config.get("awesome_list", {}),
+            "producthunt": run_config.get("producthunt", {}),
+            "directory": run_config.get("directory", {}),
+            "custom_awesome_urls": run_config.get("custom_awesome_urls", []),
         }
 
         run = DiscoveryRun(
@@ -154,18 +247,50 @@ async def trigger_discovery_run(
 
         run_id = str(run.id)
 
-        # Start the discovery pipeline in the background
-        async def run_pipeline_background(run_id: str, source_list: list[str] | None, triggered_by: str):
-            """Background task to run the discovery pipeline."""
+        # Extract config for background task
+        pipeline_config = {
+            "steps": run_config_with_progress.get("steps", {}),
+            "global_limit": run_config_with_progress.get("global_limit"),
+            "github": run_config_with_progress.get("github", {}),
+            "awesome_list": run_config_with_progress.get("awesome_list", {}),
+            "producthunt": run_config_with_progress.get("producthunt", {}),
+            "directory": run_config_with_progress.get("directory", {}),
+            "custom_awesome_urls": run_config_with_progress.get("custom_awesome_urls", []),
+        }
+
+        # Start the discovery pipeline in the background with timeout
+        async def run_pipeline_background(run_id: str, source_list: list[str] | None, triggered_by: str, config: dict):
+            """Background task to run the discovery pipeline with timeout protection."""
             from app.db import SessionLocal
             background_db = SessionLocal()
+            pipeline_timeout = getattr(settings, 'DISCOVERY_PIPELINE_TIMEOUT', 1800)
+
             try:
-                await run_discovery_pipeline(
-                    db=background_db,
-                    sources=source_list,
-                    triggered_by=triggered_by,
-                    existing_run_id=run_id  # Pass existing run ID
+                # Wrap pipeline in timeout
+                await asyncio.wait_for(
+                    run_discovery_pipeline(
+                        db=background_db,
+                        sources=source_list,
+                        triggered_by=triggered_by,
+                        config=config,  # Pass configuration
+                        existing_run_id=run_id  # Pass existing run ID
+                    ),
+                    timeout=pipeline_timeout
                 )
+            except asyncio.TimeoutError:
+                logger.error(f"Discovery pipeline timed out after {pipeline_timeout} seconds")
+                # Update the run record with timeout failure
+                try:
+                    run_record = background_db.query(DiscoveryRun).filter(
+                        DiscoveryRun.id == run_id
+                    ).first()
+                    if run_record and run_record.status == "running":
+                        run_record.status = "failed"
+                        run_record.error_message = f"Pipeline timeout after {pipeline_timeout // 60} minutes"
+                        run_record.completed_at = datetime.now(timezone.utc)
+                        background_db.commit()
+                except Exception as update_error:
+                    logger.error(f"Failed to update run record with timeout: {update_error}")
             except Exception as e:
                 logger.error(f"Background discovery pipeline failed: {e}")
                 # Update the run record with failure
@@ -173,7 +298,7 @@ async def trigger_discovery_run(
                     run_record = background_db.query(DiscoveryRun).filter(
                         DiscoveryRun.id == run_id
                     ).first()
-                    if run_record:
+                    if run_record and run_record.status == "running":
                         run_record.status = "failed"
                         run_record.error_message = str(e)
                         run_record.completed_at = datetime.now(timezone.utc)
@@ -184,7 +309,7 @@ async def trigger_discovery_run(
                 background_db.close()
 
         # Create background task - don't await it
-        asyncio.create_task(run_pipeline_background(run_id, source_list, triggered_by))
+        asyncio.create_task(run_pipeline_background(run_id, source_list, triggered_by, pipeline_config))
 
         # Return immediately with run_id for polling
         return {
@@ -451,6 +576,37 @@ async def get_run_status(
         "error_message": run.error_message,
         "triggered_by": run.triggered_by,
         "progress": progress
+    }
+
+
+@router.post("/runs/{run_id}/cancel")
+async def cancel_discovery_run(
+    run_id: str,
+    user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Cancel a running discovery run."""
+    run = db.query(DiscoveryRun).filter(DiscoveryRun.id == run_id).first()
+
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    if run.status != "running":
+        return {
+            "status": "not_running",
+            "message": f"Run is not currently running (status: {run.status})"
+        }
+
+    run.status = "cancelled"
+    run.completed_at = datetime.now(timezone.utc)
+    run.error_message = f"Cancelled by {user.email}"
+    db.commit()
+
+    logger.info(f"Discovery run {run_id} cancelled by {user.email}")
+
+    return {
+        "status": "cancelled",
+        "message": "Discovery run has been cancelled"
     }
 
 

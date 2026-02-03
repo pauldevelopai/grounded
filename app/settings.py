@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # Discovery Rate Limits
     DISCOVERY_RATE_LIMIT_DELAY: float = 2.0  # seconds between requests
 
+    # Discovery Pipeline Timeouts
+    DISCOVERY_PIPELINE_TIMEOUT: int = 1800  # 30 minutes max for entire pipeline
+    DISCOVERY_PROGRESS_STALE_MINUTES: int = 5  # Mark failed if no update in 5 min
+
     class Config:
         env_file = ".env"
         case_sensitive = True

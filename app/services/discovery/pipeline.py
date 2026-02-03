@@ -217,12 +217,20 @@ async def run_discovery_pipeline(
             Options: "github", "producthunt", "awesome_list", "directory"
         dry_run: If True, don't save to database
         triggered_by: Who triggered this run ("manual", "cron", or user ID)
-        config: Optional configuration overrides for sources
+        config: Optional configuration overrides:
+            - steps: {"fetch": bool, "validate": bool, "dedupe": bool}
+            - global_limit: int - max total items to process
+            - github: {"min_stars": int, "max_results_per_topic": int}
+            - producthunt: {"min_votes": int, "days_back": int}
+            - awesome_list: {"max_per_list": int}
+            - directory: {"max_per_directory": int}
+            - custom_awesome_urls: list[str]
         existing_run_id: If provided, use existing run record instead of creating new
 
     Returns:
         DiscoveryRun record with stats
     """
+    config = config or {}
     # Use existing run or create new one
     if existing_run_id and not dry_run:
         run = db.query(DiscoveryRun).filter(DiscoveryRun.id == existing_run_id).first()
@@ -268,6 +276,7 @@ async def run_discovery_pipeline(
             "current_tool": current_tool,
             "tools_in_current_source": tools_in_source,
             "tools_processed_in_source": tools_processed,
+            "last_progress_at": datetime.utcnow().isoformat(),  # Track when last updated
         }
         # Also update the visible stats
         run.tools_found = tools_found
@@ -275,6 +284,13 @@ async def run_discovery_pipeline(
         run.tools_updated = tools_updated
         run.tools_skipped = tools_skipped
         db.commit()
+
+    def check_cancellation():
+        """Check if the run has been cancelled by admin."""
+        if dry_run:
+            return False
+        db.refresh(run)
+        return run.status == "cancelled"
 
     try:
         # Get sources to run
@@ -311,8 +327,27 @@ async def run_discovery_pipeline(
         tools_skipped = 0
         sources_completed = 0
 
+        # Extract pipeline step configuration
+        steps_config = config.get("steps", {"fetch": True, "validate": True, "dedupe": True})
+        global_limit = config.get("global_limit")
+        total_processed = 0
+
         # Run each source
         for source_index, source in enumerate(discovery_sources):
+            # Check global limit
+            if global_limit and total_processed >= global_limit:
+                logger.info(f"Global limit reached ({global_limit}), stopping discovery")
+                break
+
+            # Check for cancellation before starting each source
+            if check_cancellation():
+                logger.info("Discovery run was cancelled by admin")
+                run.error_message = "Cancelled by admin"
+                run.completed_at = datetime.utcnow()
+                if not dry_run:
+                    db.commit()
+                return run
+
             logger.info(f"Running discovery source: {source.name}")
 
             # Update progress: starting new source
@@ -326,8 +361,49 @@ async def run_discovery_pipeline(
             )
 
             try:
-                # Fetch tools from source
-                source_config = (config or {}).get(source.source_type, {})
+                # Build source-specific config (copy to avoid modifying original)
+                source_config = dict(config.get(source.source_type, {}))
+
+                # Handle custom awesome list URLs for awesome_list source
+                if source.source_type == "awesome_list" and config.get("custom_awesome_urls"):
+                    source_config["custom_urls"] = config.get("custom_awesome_urls", [])
+
+                # Calculate remaining items if global limit is set
+                if global_limit:
+                    remaining = global_limit - total_processed
+                    if remaining <= 0:
+                        logger.info(f"Global limit reached, skipping {source.name}")
+                        sources_completed += 1
+                        continue
+
+                    # Apply remaining as max limit for each source type
+                    if source.source_type == "github":
+                        source_config["max_results_per_topic"] = min(
+                            source_config.get("max_results_per_topic", 30),
+                            remaining
+                        )
+                    elif source.source_type == "awesome_list":
+                        source_config["max_per_list"] = min(
+                            source_config.get("max_per_list", 50),
+                            remaining
+                        )
+                    elif source.source_type == "directory":
+                        source_config["max_per_directory"] = min(
+                            source_config.get("max_per_directory", 100),
+                            remaining
+                        )
+                    elif source.source_type == "producthunt":
+                        source_config["max_results"] = min(
+                            source_config.get("max_results", 100),
+                            remaining
+                        )
+
+                # Fetch tools from source (skip if fetch step disabled)
+                if not steps_config.get("fetch", True):
+                    logger.info(f"Skipping fetch for {source.name} (disabled)")
+                    sources_completed += 1
+                    continue
+
                 raw_tools = await source.discover(source_config)
                 tools_found += len(raw_tools)
                 tools_in_source = len(raw_tools)
@@ -344,6 +420,21 @@ async def run_discovery_pipeline(
 
                 # Process each tool
                 for tool_index, raw_tool in enumerate(raw_tools):
+                    # Check global limit
+                    if global_limit and total_processed >= global_limit:
+                        logger.info(f"Global limit reached ({global_limit}), stopping")
+                        break
+
+                    # Check for cancellation every 10 tools
+                    if tool_index > 0 and tool_index % 10 == 0:
+                        if check_cancellation():
+                            logger.info("Discovery run was cancelled by admin")
+                            run.error_message = "Cancelled by admin"
+                            run.completed_at = datetime.utcnow()
+                            if not dry_run:
+                                db.commit()
+                            return run
+
                     result = process_discovered_tool(
                         db=db,
                         raw_tool=raw_tool,
@@ -351,13 +442,17 @@ async def run_discovery_pipeline(
                         existing_tools=existing_tools,
                         existing_slugs=existing_slugs,
                         kit_tools=kit_tools,
-                        dry_run=dry_run
+                        dry_run=dry_run,
+                        skip_validation=not steps_config.get("validate", True),
+                        skip_dedupe=not steps_config.get("dedupe", True)
                     )
 
                     if result == "new":
                         tools_new += 1
+                        total_processed += 1
                     elif result == "updated":
                         tools_updated += 1
+                        total_processed += 1
                     elif result == "skipped":
                         tools_skipped += 1
 
@@ -420,7 +515,9 @@ def process_discovered_tool(
     existing_tools: list[DiscoveredTool],
     existing_slugs: set[str],
     kit_tools: list[dict] | None = None,
-    dry_run: bool = False
+    dry_run: bool = False,
+    skip_validation: bool = False,
+    skip_dedupe: bool = False
 ) -> str:
     """
     Process a single discovered tool.
@@ -433,6 +530,8 @@ def process_discovered_tool(
         existing_slugs: Existing slugs for collision detection
         kit_tools: Curated kit tools for dedup
         dry_run: If True, don't save to database
+        skip_validation: If True, skip quality validation step
+        skip_dedupe: If True, skip deduplication check
 
     Returns:
         "new", "updated", or "skipped"
@@ -457,30 +556,39 @@ def process_discovered_tool(
                 db.commit()
             return "updated"
 
-        # Run quality validation BEFORE deduplication
-        passes_quality, quality_score, quality_flags = validate_tool_quality(
-            raw_tool, source.source_type
-        )
-
-        if not passes_quality:
-            logger.debug(
-                f"Skipping low-quality tool: {raw_tool.name} "
-                f"(score: {quality_score:.2f}, flags: {quality_flags})"
+        # Run quality validation BEFORE deduplication (unless skipped)
+        quality_score = 0.5
+        quality_flags = {}
+        if not skip_validation:
+            passes_quality, quality_score, quality_flags = validate_tool_quality(
+                raw_tool, source.source_type
             )
-            return "skipped"
 
-        # Run deduplication
-        is_duplicate, matches, dedup_confidence = deduplicate_tool(
-            db=db,
-            raw_tool=raw_tool,
-            existing_tools=existing_tools,
-            kit_tools=kit_tools
-        )
+            if not passes_quality:
+                logger.debug(
+                    f"Skipping low-quality tool: {raw_tool.name} "
+                    f"(score: {quality_score:.2f}, flags: {quality_flags})"
+                )
+                return "skipped"
+        else:
+            # Default score when validation is skipped
+            quality_score = 0.7
+            quality_flags = {"validation_skipped": True}
 
-        # Skip definite duplicates (exact URL or domain match)
-        if is_duplicate and any(m.match_score >= 0.9 for m in matches):
-            logger.debug(f"Skipping duplicate: {raw_tool.name} ({raw_tool.url})")
-            return "skipped"
+        # Run deduplication (unless skipped)
+        matches = []
+        if not skip_dedupe:
+            is_duplicate, matches, dedup_confidence = deduplicate_tool(
+                db=db,
+                raw_tool=raw_tool,
+                existing_tools=existing_tools,
+                kit_tools=kit_tools
+            )
+
+            # Skip definite duplicates (exact URL or domain match)
+            if is_duplicate and any(m.match_score >= 0.9 for m in matches):
+                logger.debug(f"Skipping duplicate: {raw_tool.name} ({raw_tool.url})")
+                return "skipped"
 
         # Generate unique slug
         slug = generate_slug(raw_tool.name, existing_slugs)

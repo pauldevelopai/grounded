@@ -124,7 +124,7 @@ class DiscoveryRun(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('running', 'completed', 'failed')",
+            "status IN ('running', 'completed', 'failed', 'cancelled')",
             name='ck_discovery_run_status'
         ),
     )

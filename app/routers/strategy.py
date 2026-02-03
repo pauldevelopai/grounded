@@ -193,3 +193,43 @@ async def export_strategy(
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
+
+@router.post("/{plan_id}/feedback")
+async def submit_strategy_feedback(
+    request: Request,
+    plan_id: str,
+    helpful: bool = Form(...),
+    implemented_tools: str = Form(""),  # Comma-separated list of tool slugs
+    user: User = Depends(require_auth_page),
+    db: Session = Depends(get_db)
+):
+    """
+    Submit feedback on a strategy plan.
+
+    This helps the system learn what recommendations work for users.
+    """
+    from app.services.learning_profile import track_strategy_feedback
+
+    # Verify user owns this plan
+    plan = db.query(StrategyPlan).filter(
+        StrategyPlan.id == plan_id,
+        StrategyPlan.user_id == user.id
+    ).first()
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Strategy plan not found")
+
+    # Parse implemented tools list
+    tools_list = [t.strip() for t in implemented_tools.split(",") if t.strip()]
+
+    # Track the feedback in learning profile
+    track_strategy_feedback(
+        db=db,
+        user_id=str(user.id),
+        strategy_id=str(plan_id),
+        helpful=helpful,
+        implemented_tools=tools_list
+    )
+
+    return {"status": "ok", "message": "Feedback recorded"}
