@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 
-from app.routers import health, admin, rag, auth_routes, toolkit, strategy, tools, clusters, sources, profile, feedback, reviews, discovery, playbook, recommendations, resources, usecases
+from app.routers import health, admin, rag, auth_routes, toolkit, strategy, tools, clusters, sources, profile, feedback, reviews, discovery, playbook, recommendations, resources, usecases, foundations
 from app.routers.recommendations import page_router as recommendations_pages
 from app.routers.discovery import approved_router as approved_tools_router
 from app.dependencies import get_current_user
@@ -123,6 +123,7 @@ app.include_router(recommendations.router)
 app.include_router(recommendations_pages)  # For You page at /for-you
 app.include_router(resources.router)  # Public resources at /resources
 app.include_router(usecases.router)  # Public use cases at /use-cases
+app.include_router(foundations.router)  # Foundational content at /foundations
 
 
 @app.get("/", response_class=HTMLResponse)

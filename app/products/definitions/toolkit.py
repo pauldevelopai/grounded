@@ -72,6 +72,12 @@ AI_TOOLKIT_PRODUCT = Product(
             requires_auth=False,
         ),
         NavigationItem(
+            label="Foundations",
+            route="/foundations",
+            icon="book",
+            requires_auth=False,
+        ),
+        NavigationItem(
             label="Activity",
             route="/toolkit",
             icon="clock",
