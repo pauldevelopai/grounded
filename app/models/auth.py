@@ -44,7 +44,7 @@ class User(Base):
     organisation_notes = Column(Text, nullable=True)
 
     # Product/Edition preference
-    selected_product = Column(String, nullable=True, default="ai_toolkit")
+    selected_product = Column(String, nullable=True, default="grounded")
     selected_edition = Column(String, nullable=True)  # None means use active edition
 
 

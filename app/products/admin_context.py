@@ -22,7 +22,7 @@ ADMIN_PRODUCT_KEY = "admin_product_id"
 ADMIN_EDITION_KEY = "admin_edition_version"
 
 # Default product when none selected
-DEFAULT_ADMIN_PRODUCT = "ai_toolkit"
+DEFAULT_ADMIN_PRODUCT = "grounded"
 
 
 def get_admin_context(request: Request) -> Tuple[Optional[Product], Optional[Edition]]:

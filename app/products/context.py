@@ -18,7 +18,7 @@ from app.products.registry import (
 
 
 # Default product when none is specified
-DEFAULT_PRODUCT_ID = "ai_toolkit"
+DEFAULT_PRODUCT_ID = "grounded"
 
 
 def _get_user_from_request(request: Optional[Request]) -> Optional[Any]:
@@ -37,7 +37,7 @@ def get_current_product(request: Optional[Request] = None) -> Product:
 
     Priority:
     1. User's selected_product preference (if logged in)
-    2. Default product (ai_toolkit)
+    2. Default product (grounded)
 
     Args:
         request: Optional FastAPI request object

@@ -396,20 +396,20 @@ class TestEditionRegistry:
         assert sealed[0] == v1
 
 
-class TestToolkitProducts:
-    """Integration tests for AI Toolkit products."""
+class TestGroundedProducts:
+    """Integration tests for Grounded products."""
 
-    def test_toolkit_registration(self):
-        """Test that toolkit products register correctly."""
+    def test_grounded_registration(self):
+        """Test that grounded products register correctly."""
         from app.products.definitions import register_all_products
 
         register_all_products()
 
-        # Check AI Toolkit product
-        toolkit = ProductRegistry.get("ai_toolkit")
-        assert toolkit is not None
-        assert toolkit.name == "AI Toolkit"
-        assert toolkit.is_active is True
+        # Check Grounded product
+        grounded = ProductRegistry.get("grounded")
+        assert grounded is not None
+        assert grounded.name == "Grounded"
+        assert grounded.is_active is True
 
         # Check AI Audio placeholder
         audio = ProductRegistry.get("ai_audio")
@@ -421,46 +421,46 @@ class TestToolkitProducts:
         assert letter is not None
         assert letter.is_active is False  # Placeholder
 
-    def test_toolkit_editions(self):
-        """Test that toolkit editions register correctly."""
+    def test_grounded_editions(self):
+        """Test that grounded editions register correctly."""
         from app.products.definitions import register_all_products
 
         register_all_products()
 
         # Check V1 (sealed)
-        v1 = EditionRegistry.get("ai_toolkit", "v1")
+        v1 = EditionRegistry.get("grounded", "v1")
         assert v1 is not None
         assert v1.is_sealed is True
         assert v1.git_reference == "a794966e77bcf1ef16ee3d93ed2a3fc5779b74a6"
         assert v1.feature_flags.discovery_enabled is False
 
-        # Check V2 (active)
-        v2 = EditionRegistry.get("ai_toolkit", "v2")
+        # Check V2 (sealed)
+        v2 = EditionRegistry.get("grounded", "v2")
         assert v2 is not None
-        assert v2.is_active is True
-        assert v2.is_sealed is False
+        assert v2.is_active is False
+        assert v2.is_sealed is True
         assert v2.feature_flags.discovery_enabled is True
 
-        # V2 should be the active edition
-        active = EditionRegistry.get_active("ai_toolkit")
-        assert active == v2
+        # V3 should be the active edition
+        active = EditionRegistry.get_active("grounded")
+        assert active.version == "v3"
 
-    def test_create_v3_from_v2(self):
-        """Test creating V3 from V2 config."""
+    def test_create_v4_from_v3(self):
+        """Test creating V4 from V3 config."""
         from app.products.definitions import register_all_products
 
         register_all_products()
 
-        # Create V3 with modified features
-        v3 = EditionRegistry.create_from_existing(
-            product_id="ai_toolkit",
-            source_version="v2",
-            new_version="v3",
-            display_name="Toolkit V3",
+        # Create V4 with modified features
+        v4 = EditionRegistry.create_from_existing(
+            product_id="grounded",
+            source_version="v3",
+            new_version="v4",
+            display_name="Grounded V4",
             feature_overrides={"admin_dashboard_enabled": False},
         )
 
-        assert v3.version == "v3"
-        assert v3.feature_flags.rag_enabled is True  # Inherited
-        assert v3.feature_flags.admin_dashboard_enabled is False  # Overridden
-        assert EditionRegistry.get_active("ai_toolkit") == v3
+        assert v4.version == "v4"
+        assert v4.feature_flags.rag_enabled is True  # Inherited
+        assert v4.feature_flags.admin_dashboard_enabled is False  # Overridden
+        assert EditionRegistry.get_active("grounded") == v4

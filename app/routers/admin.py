@@ -110,7 +110,7 @@ async def admin_dashboard(
     from app.products.registry import EditionRegistry
 
     current_cookie = request.cookies.get(ADMIN_EDITION_KEY)
-    active_edition = EditionRegistry.get_active("ai_toolkit")
+    active_edition = EditionRegistry.get_active("grounded")
     active_version = active_edition.version if active_edition else "v2"
 
     # Set cookie if: no cookie, or cookie is set to non-active edition
@@ -179,7 +179,7 @@ async def admin_dashboard(
     if needs_edition_cookie and admin_context.get("admin_edition_version"):
         set_admin_context_cookies(
             response,
-            admin_context.get("admin_product_id", "ai_toolkit"),
+            admin_context.get("admin_product_id", "grounded"),
             admin_context.get("admin_edition_version")
         )
 

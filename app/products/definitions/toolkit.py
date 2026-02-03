@@ -1,11 +1,11 @@
 """
-AI Toolkit Product Definition.
+Grounded Product Definition.
 
 This is the primary product in the system. It defines:
-- AI Toolkit product configuration
-- Toolkit V1 (sealed, historical edition)
-- Toolkit V2 (sealed, historical edition)
-- Toolkit V3 (current, active edition) - AWS Lightsail deployment
+- Grounded product configuration
+- Grounded V1 (sealed, historical edition)
+- Grounded V2 (sealed, historical edition)
+- Grounded V3 (current, active edition) - AWS Lightsail deployment
 """
 
 from datetime import datetime
@@ -24,12 +24,12 @@ from app.products.registry import ProductRegistry, EditionRegistry
 # PRODUCT DEFINITION
 # =============================================================================
 
-AI_TOOLKIT_PRODUCT = Product(
-    id="ai_toolkit",
-    name="AI Toolkit",
+GROUNDED_PRODUCT = Product(
+    id="grounded",
+    name="Grounded",
     description="Grounded - Discover and master AI tools",
     branding=Branding(
-        logo_text="AI Toolkit",
+        logo_text="Grounded",
         logo_path=None,  # Uses text-based logo
         primary_color="#3B82F6",    # Blue
         secondary_color="#1E40AF",  # Dark blue
@@ -110,7 +110,7 @@ AI_TOOLKIT_PRODUCT = Product(
 # IMPORTANT: V1 is SEALED. Do not add new features to this edition.
 # Any new features should only be added to V2 or later editions.
 
-TOOLKIT_V1_FEATURES = FeatureFlags(
+GROUNDED_V1_FEATURES = FeatureFlags(
     # =========================================================================
     # CORE FEATURES - V1 had basic RAG, no discovery
     # =========================================================================
@@ -158,11 +158,11 @@ TOOLKIT_V1_FEATURES = FeatureFlags(
     admin_discovery_enabled=False,  # Discovery management was not in V1
 )
 
-TOOLKIT_V1_EDITION = Edition(
-    product_id="ai_toolkit",
+GROUNDED_V1_EDITION = Edition(
+    product_id="grounded",
     version="v1",
-    display_name="Toolkit V1",
-    feature_flags=TOOLKIT_V1_FEATURES,
+    display_name="Grounded V1",
+    feature_flags=GROUNDED_V1_FEATURES,
     is_sealed=True,
     is_active=False,
     sealed_at=datetime(2025, 1, 15, 0, 0, 0),  # Approximate seal date
@@ -170,7 +170,7 @@ TOOLKIT_V1_EDITION = Edition(
     git_reference="a794966e77bcf1ef16ee3d93ed2a3fc5779b74a6",
     created_at=datetime(2024, 12, 1, 0, 0, 0),  # Approximate creation date
     description=(
-        "Initial version of AI Toolkit with core RAG functionality, "
+        "Initial version of Grounded with core RAG functionality, "
         "cluster organization, foundations, and document browsing. "
         "This version predates the discovery pipeline, strategy builder, "
         "personalized recommendations, and user reviews."
@@ -187,7 +187,7 @@ TOOLKIT_V1_EDITION = Edition(
 # IMPORTANT: V2 is SEALED. Do not add new features to this edition.
 # Any new features should only be added to V3 or later editions.
 
-TOOLKIT_V2_FEATURES = FeatureFlags(
+GROUNDED_V2_FEATURES = FeatureFlags(
     # =========================================================================
     # CORE FEATURES - All enabled
     # =========================================================================
@@ -235,11 +235,11 @@ TOOLKIT_V2_FEATURES = FeatureFlags(
     admin_discovery_enabled=True,
 )
 
-TOOLKIT_V2_EDITION = Edition(
-    product_id="ai_toolkit",
+GROUNDED_V2_EDITION = Edition(
+    product_id="grounded",
     version="v2",
-    display_name="Toolkit V2",
-    feature_flags=TOOLKIT_V2_FEATURES,
+    display_name="Grounded V2",
+    feature_flags=GROUNDED_V2_FEATURES,
     is_sealed=True,
     is_active=False,
     sealed_at=datetime(2026, 2, 3, 0, 0, 0),
@@ -247,7 +247,7 @@ TOOLKIT_V2_EDITION = Edition(
     git_reference="9cdb9e8261a9061e07e927db6a745a8967f7edf4",
     created_at=datetime(2025, 1, 1, 0, 0, 0),
     description=(
-        "Full feature set version of AI Toolkit including "
+        "Full feature set version of Grounded including "
         "discovery pipeline, strategy builder, playbooks, recommendations, "
         "and user reviews. Sealed before AWS Lightsail migration."
     ),
@@ -265,7 +265,7 @@ TOOLKIT_V2_EDITION = Edition(
 # Public IPv4: 3.10.224.68
 # Public IPv6: 2a05:d01c:39:4900:1f55:672a:3ac7:c465
 
-TOOLKIT_V3_FEATURES = FeatureFlags(
+GROUNDED_V3_FEATURES = FeatureFlags(
     # =========================================================================
     # CORE FEATURES - All enabled
     # =========================================================================
@@ -313,11 +313,11 @@ TOOLKIT_V3_FEATURES = FeatureFlags(
     admin_discovery_enabled=True,
 )
 
-TOOLKIT_V3_EDITION = Edition(
-    product_id="ai_toolkit",
+GROUNDED_V3_EDITION = Edition(
+    product_id="grounded",
     version="v3",
-    display_name="Toolkit V3",
-    feature_flags=TOOLKIT_V3_FEATURES,
+    display_name="Grounded V3",
+    feature_flags=GROUNDED_V3_FEATURES,
     is_sealed=False,
     is_active=True,
     sealed_at=None,
@@ -325,7 +325,7 @@ TOOLKIT_V3_EDITION = Edition(
     git_reference=None,  # Not sealed, no fixed reference
     created_at=datetime(2026, 2, 3, 0, 0, 0),
     description=(
-        "Current version of AI Toolkit deployed on AWS Lightsail (London). "
+        "Current version of Grounded deployed on AWS Lightsail (London). "
         "Full feature set with production infrastructure including "
         "discovery pipeline, strategy builder, playbooks, recommendations, "
         "and user reviews."
@@ -337,16 +337,16 @@ TOOLKIT_V3_EDITION = Edition(
 # REGISTRATION
 # =============================================================================
 
-def register_toolkit() -> None:
+def register_grounded() -> None:
     """
-    Register the AI Toolkit product and its editions.
+    Register the Grounded product and its editions.
 
     This function should be called during application startup.
     """
     # Register the product first
-    ProductRegistry.register(AI_TOOLKIT_PRODUCT)
+    ProductRegistry.register(GROUNDED_PRODUCT)
 
     # Register editions (V1, V2 sealed, then V3 active)
-    EditionRegistry.register(TOOLKIT_V1_EDITION)
-    EditionRegistry.register(TOOLKIT_V2_EDITION)
-    EditionRegistry.register(TOOLKIT_V3_EDITION)
+    EditionRegistry.register(GROUNDED_V1_EDITION)
+    EditionRegistry.register(GROUNDED_V2_EDITION)
+    EditionRegistry.register(GROUNDED_V3_EDITION)

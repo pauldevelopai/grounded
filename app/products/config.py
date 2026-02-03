@@ -31,7 +31,7 @@ class Branding:
     Product branding configuration.
 
     Attributes:
-        logo_text: Text displayed as logo (e.g., "AI Toolkit")
+        logo_text: Text displayed as logo (e.g., "Grounded")
         logo_path: Optional path to logo image asset
         primary_color: Primary brand color (hex)
         secondary_color: Secondary brand color (hex)
@@ -233,11 +233,11 @@ class Product:
     A product definition.
 
     Products are distinct applications that share infrastructure but
-    present as separate apps to users. Examples: AI Toolkit, AI Audio, Letter+
+    present as separate apps to users. Examples: Grounded, AI Audio, Letter+
 
     Attributes:
-        id: Unique identifier (e.g., "ai_toolkit")
-        name: Display name (e.g., "AI Toolkit")
+        id: Unique identifier (e.g., "grounded")
+        name: Display name (e.g., "Grounded")
         description: Short product description
         branding: Branding configuration
         navigation: List of navigation items

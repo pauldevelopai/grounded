@@ -57,7 +57,7 @@ async def login_page(
             "user": None,
             "next": next or "",
             "available_products": available_products,
-            "selected_product": "ai_toolkit",  # Default selection
+            "selected_product": "grounded",  # Default selection
         }
     )
     CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
@@ -89,7 +89,7 @@ async def login(
                 "user": None,
                 "next": next or "",
                 "available_products": available_products,
-                "selected_product": product or "ai_toolkit",
+                "selected_product": product or "grounded",
             }
         )
         CSRFProtectionMiddleware.set_csrf_cookie(template_response, csrf_token)
@@ -97,7 +97,7 @@ async def login(
 
     # Get the form data to extract edition selection
     form_data = await request.form()
-    edition_key = f"edition_{product}" if product else "edition_ai_toolkit"
+    edition_key = f"edition_{product}" if product else "edition_grounded"
     edition = form_data.get(edition_key)
 
     # Update user's product/edition preference

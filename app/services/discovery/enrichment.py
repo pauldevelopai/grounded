@@ -24,7 +24,7 @@ def fetch_url_content(url: str, timeout: float = 10.0) -> Optional[str]:
     """Fetch and extract text content from a URL."""
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; AIToolkit/1.0; +https://aitoolkit.example.com)"
+            "User-Agent": "Mozilla/5.0 (compatible; Grounded/1.0; +https://grounded.example.com)"
         }
         response = httpx.get(url, headers=headers, timeout=timeout, follow_redirects=True)
         response.raise_for_status()
@@ -118,7 +118,7 @@ def generate_tool_content(
 
     context = "\n\n".join(context_parts)
 
-    prompt = f"""You are a technical writer for a journalism AI toolkit. Based on the information provided about this tool, write:
+    prompt = f"""You are a technical writer for Grounded, a journalism AI tools platform. Based on the information provided about this tool, write:
 
 1. A clear, factual DESCRIPTION (2-3 paragraphs) explaining what the tool is and what it does. Be specific about features and capabilities. Do not make up features - only describe what you can verify from the provided content.
 
