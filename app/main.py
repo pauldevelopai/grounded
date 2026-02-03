@@ -58,8 +58,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Grounded",
-    description="Grounded - AI Learning Platform",
+    title="AI Toolkit",
+    description="AI Toolkit - AI Learning Platform",
     version="0.1.0",
     lifespan=lifespan
 )
@@ -161,7 +161,7 @@ async def home(
         {
             "request": request,
             "user": user,
-            "title": "Grounded",
+            "title": "AI Toolkit",
             "clusters": enriched_clusters,
             "stats": stats,
         }

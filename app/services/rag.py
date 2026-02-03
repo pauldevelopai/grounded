@@ -152,14 +152,14 @@ def generate_answer(
     if not search_results:
         # No matching toolkit content — use LLM with general knowledge
         try:
-            fallback_prompt = """You are "Ask the Toolkit", a knowledgeable AI assistant for Grounded, a journalism AI learning platform.
+            fallback_prompt = """You are "Ask the Toolkit", a knowledgeable AI assistant for AI Toolkit, a journalism AI learning platform.
 
-You have access to Grounded knowledge base, but no directly relevant content was found for this query. Use your general knowledge to help the user.
+You have access to AI Toolkit knowledge base, but no directly relevant content was found for this query. Use your general knowledge to help the user.
 
 RULES:
 1. If the user is greeting you or making small talk, respond warmly and mention you can help with questions about AI tools, strategies, and best practices for journalism.
 2. If the user asked a substantive question, answer it using your general knowledge. Be helpful and informative.
-3. If your answer relates to topics covered in Grounded (AI tools, journalism, verification, fact-checking, content generation, data analysis, security), mention that Grounded may have more specific guidance and suggest they ask about a related topic.
+3. If your answer relates to topics covered in AI Toolkit (AI tools, journalism, verification, fact-checking, content generation, data analysis, security), mention that AI Toolkit may have more specific guidance and suggest they ask about a related topic.
 4. Be concise but thorough."""
 
             client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -173,7 +173,7 @@ RULES:
             )
             fallback_answer = completion.choices[0].message.content
         except Exception:
-            fallback_answer = "I couldn't find anything related to that in Grounded. Try asking about a specific AI tool or strategy."
+            fallback_answer = "I couldn't find anything related to that in AI Toolkit. Try asking about a specific AI tool or strategy."
 
         response = {
             "answer": fallback_answer,
@@ -201,15 +201,15 @@ RULES:
         context = context[:settings.RAG_MAX_CONTEXT_LENGTH] + "..."
 
     # Build prompt with augmented grounding instructions
-    system_prompt = """You are "Ask the Toolkit", a knowledgeable AI assistant for Grounded, a journalism AI learning platform.
+    system_prompt = """You are "Ask the Toolkit", a knowledgeable AI assistant for AI Toolkit, a journalism AI learning platform.
 You have deep expertise in AI, journalism, and technology. You are augmented with specific editorial toolkit content provided below.
 
 IMPORTANT RULES:
 1. If the user is greeting you or making small talk, respond warmly. Mention you can help with questions about AI tools for journalism.
 2. PRIORITISE the provided editorial toolkit context when answering. When you use toolkit content, cite which section ([1], [2], etc.) you're referencing.
-3. You MAY supplement with your general knowledge to give fuller, more useful answers — but clearly distinguish between what comes from Grounded (cited) and your own knowledge.
+3. You MAY supplement with your general knowledge to give fuller, more useful answers — but clearly distinguish between what comes from AI Toolkit (cited) and your own knowledge.
 4. When citing CDI scores or other specific data from the toolkit, state the numbers exactly as given.
-5. If the question is outside Grounded's scope, answer using your general knowledge and note that this isn't from the toolkit.
+5. If the question is outside AI Toolkit's scope, answer using your general knowledge and note that this isn't from the toolkit.
 6. Be helpful, concise, and accurate. Give practical advice where appropriate.
 7. If you're unsure, say so rather than guessing."""
 
@@ -232,7 +232,7 @@ IMPORTANT RULES:
 USER CONTEXT (tailor your answer's complexity and focus accordingly):
 {chr(10).join(profile_parts)}"""
 
-    user_prompt = f"""Context from Grounded:
+    user_prompt = f"""Context from AI Toolkit:
 
 {context}
 

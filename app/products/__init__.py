@@ -2,8 +2,8 @@
 Products, Editions, and Version Sealing Architecture.
 
 This module provides the foundational architecture for managing:
-- Products: Distinct apps sharing infrastructure (Grounded, AI Audio, Letter+)
-- Editions: Different versions of the same product (Grounded V1, V2, etc.)
+- Products: Distinct apps sharing infrastructure (AI Toolkit, AI Audio, Letter+)
+- Editions: Different versions of the same product (AI Toolkit V1, V2, etc.)
 - Sealing: Mechanism to freeze versions so new versions don't affect sealed ones
 
 Usage:
@@ -11,11 +11,11 @@ Usage:
     from app.products import ProductRegistry, EditionRegistry
 
     # Get the current active product and edition
-    grounded = get_product("grounded")
-    current_edition = get_active_edition("grounded")
+    aitoolkit = get_product("aitoolkit")
+    current_edition = get_active_edition("aitoolkit")
 
     # Check if an edition is sealed
-    v1 = get_edition("grounded", "v1")
+    v1 = get_edition("aitoolkit", "v1")
     if v1.is_sealed:
         print("V1 is frozen - no new features")
 """

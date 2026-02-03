@@ -18,7 +18,7 @@ from app.products.registry import (
 
 
 # Default product when none is specified
-DEFAULT_PRODUCT_ID = "grounded"
+DEFAULT_PRODUCT_ID = "aitoolkit"
 
 
 def _get_user_from_request(request: Optional[Request]) -> Optional[Any]:

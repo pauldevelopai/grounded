@@ -447,7 +447,7 @@ def build_explanation(
         citations.append(Citation(
             type=CitationType.CDI_DATA,
             text=f"Cost: {cost}/10, Difficulty: {difficulty}/10, Invasiveness: {invasiveness}/10",
-            source="Grounded CDI Scores",
+            source="AI Toolkit CDI Scores",
         ))
 
     # 4. Organization-specific insights

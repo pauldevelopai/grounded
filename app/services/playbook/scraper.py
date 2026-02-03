@@ -127,7 +127,7 @@ class PlaybookScraper:
         await self._respect_delay(domain)
 
         headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; GroundedPlaybook/1.0; +https://grounded.example.com/bot)',
+            'User-Agent': 'Mozilla/5.0 (compatible; AIToolkitPlaybook/1.0; +https://aitoolkit.example.com/bot)',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5',
         }
